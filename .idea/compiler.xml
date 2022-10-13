@@ -6,11 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Receipt Checker" />
+        <module name="Receipt Splitter" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Receipt Checker" target="17" />
+      <module name="Receipt Splitter" target="17" />
     </bytecodeTargetLevel>
   </component>
 </project>

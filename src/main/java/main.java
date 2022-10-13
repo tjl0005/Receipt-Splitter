@@ -1,25 +1,35 @@
-import java.io.IOException;
-import java.util.*;
-import java.util.List;
-
-// TODO: Add option to include labels -> build on edit action
-// TODO: Get integers from a line given a prefix (label)
-// TODO: Basic calculator
+import javax.swing.*;
+import java.awt.*;
 
 class checker {
-    public static void main(String[] args) throws IOException {
-        boolean finished = false;
-        List<String> receipt = new ArrayList<>(receiptFile.readReceipt("l.png"));
+    public static void main(String[] args) {
+        setLook();
+        setUIFont (new javax.swing.plaf.FontUIResource(new Font("Arial",Font.PLAIN, 20)));
 
-        while (!finished) {
-            ui.displayReceipt(receipt);
-            actions.performAction(receipt);
-            ui.displayReceipt(receipt);
-            finished = ui.askFinished();
+        new StartPage();
+    }
+
+    private static void setLook(){
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");  // This line gives Windows Theme
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+                 UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
         }
 
-        System.out.println("Final receipt saved");
-        String fileName = ui.getString("Please choose the name of the receipt file");
-        receiptFile.writeToFile(receipt, fileName);
+    }
+
+    private static void setUIFont(javax.swing.plaf.FontUIResource f)
+    {
+        java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements())
+        {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource)
+            {
+                UIManager.put(key, f);
+            }
+        }
     }
 }
