@@ -1,4 +1,4 @@
-package Classes;
+package classes;
 
 import javax.swing.*;
 import java.awt.*;

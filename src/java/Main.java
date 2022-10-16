@@ -1,4 +1,4 @@
-import Pages.StartPage;
+import pages.StartPage;
 
 import javax.swing.*;
 import java.awt.*;

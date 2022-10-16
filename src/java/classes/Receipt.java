@@ -1,4 +1,4 @@
-package Classes;
+package classes;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;

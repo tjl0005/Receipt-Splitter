@@ -1,27 +1,29 @@
-package Tabs;
+package tabs;
 
-import Classes.Receipt;
+import classes.Receipt;
+import pages.MainPage;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class ReceiptsTab extends JPanel {
-    public ReceiptsTab(List<String> currentReceipt, String userID) {
-
+    // TODO: Properly implement model
+    public ReceiptsTab(String userID, MainPage.DefaultListModel receiptModel) {
+        List<String> receiptCopy = receiptModel.getValue();
         List<String> allReceipts = Receipt.getReceiptNames(userID);
         DefaultListModel<String> jList = new DefaultListModel<>();
 
         if (allReceipts == null){
             this.add(new JLabel("No saved receipts yet"));
-            jList.addAll(currentReceipt);
+            jList.addAll(receiptCopy);
         }
         else{
             // Initial State
             if (!allReceipts.contains("Current Receipt")) {
                 // Update list of saved receipts with current receipt
                 allReceipts.add(0, "Current Receipt");
-                jList.addAll(currentReceipt);
+                jList.addAll(receiptCopy);
             }
 
             final JComboBox<String> selectionBox = new JComboBox<>(allReceipts.toArray(new String[0]));
@@ -32,11 +34,10 @@ public class ReceiptsTab extends JPanel {
                     String selectedReceipt = "Receipts/" + userID + "/" + allReceipts.get(selIndex);
                     jList.addAll(Receipt.getReceiptFile(selectedReceipt));
                 } else{
-                    jList.addAll(currentReceipt);
+                    jList.addAll(receiptCopy);
                 }
                 this.revalidate();
             });
-
 
             this.add(selectionBox);
         }
@@ -47,7 +48,6 @@ public class ReceiptsTab extends JPanel {
         scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
 
         this.add(scrollPane);
-
         this.setVisible(true);
     }
 }

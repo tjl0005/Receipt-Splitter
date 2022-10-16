@@ -1,7 +1,7 @@
-package Tabs;
+package tabs;
 
-import Classes.CheckboxListRenderer;
-import Pages.MainPage;
+import classes.CheckboxListRenderer;
+import pages.MainPage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,49 +12,42 @@ import java.util.List;
 
 
 public class EditingTab extends JPanel {
-    final List<Integer> currentSelection = new ArrayList<>();
+    List<Integer> currentSelection = new ArrayList<>();
     final JTextField editTextField = new JTextField();
     final JPanel displayPanel = new JPanel(new BorderLayout());
     final JPanel buttonPanel = new JPanel(new FlowLayout());
     final JButton editButton = new JButton("Edit");
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
+    JScrollPane scrollPane = new JScrollPane();
 
-    public EditingTab(JFrame frame, List<String> receipt, List<String> labels) {
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
-        list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent event) {
-                mouseSelection(event);
-                buttonsValid(receipt);
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane(list);
-        buttonsValid(receipt); // Disable buttons if no selections made
+    public EditingTab(MainPage.DefaultListModel receiptModel) {
+        List<String> receipt = receiptModel.getValue(); // Copying to make editing easier (need to improve this)
+        setScrollPane(receiptModel.getValue()); // This is the initial setup
+        buttonsValid(receipt); // Buttons initially disabled
 
         addButton.addActionListener(e -> {
-            receipt.add(currentSelection.get(0), editTextField.getText());
-            resetTabs(frame, receipt, labels);
+            receipt.add(currentSelection.get(0), editTextField.getText()); // Adding value to receipt copy
+            receiptModel.setValue(receipt); // Updating model with receipt copy
+            setScrollPane(receiptModel.getValue()); // Now updating scroll pane
         });
 
         editButton.addActionListener(e -> {
-            int editIndex = currentSelection.get(0);
-            receipt.set(editIndex, editTextField.getText());
-            resetTabs(frame, receipt, labels);
+            receipt.set(currentSelection.get(0), editTextField.getText());
+            receiptModel.setValue(receipt);
+            setScrollPane(receiptModel.getValue());
         });
 
         deleteButton.addActionListener(e -> {
             for (int index : currentSelection) {
                 receipt.remove(index);
             }
-            resetTabs(frame, receipt, labels);
+            receiptModel.setValue(receipt);
+            setScrollPane(receiptModel.getValue());
         });
 
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
-        scrollPane.setPreferredSize(new Dimension(350, 490)); // Optimised for receipt
-        displayPanel.add(scrollPane);
         displayPanel.setBackground(Color.WHITE);
+        displayPanel.setPreferredSize(new Dimension(350, 490)); // Optimised for receipt
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
@@ -69,7 +62,7 @@ public class EditingTab extends JPanel {
     }
 
     private void mouseSelection(MouseEvent event){
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // No need to check cast
         JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
 
         // Get the selected item
@@ -87,9 +80,29 @@ public class EditingTab extends JPanel {
         }
     }
 
-    private void resetTabs(JFrame frame, List<String> receipt, List<String> labels) {
-        frame.dispose();
-        new MainPage(receipt, labels, 1);
+    public void setScrollPane(List<String> receipt){
+        // Removing the old scrollPane and resetting the current selection
+        displayPanel.remove(scrollPane);
+        currentSelection = new ArrayList<>();
+
+        // Set up the list
+        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
+        list.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent event) {
+                mouseSelection(event);
+                buttonsValid(receipt);
+            }
+        });
+
+        // Define new scrollPane
+        scrollPane = new JScrollPane(list);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
+
+        // Refresh with updated display panel
+        displayPanel.add(scrollPane);
+        displayPanel.revalidate();
+        displayPanel.repaint();
     }
 
     // Hide buttons until valid selection made

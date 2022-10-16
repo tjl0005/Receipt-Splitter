@@ -1,6 +1,6 @@
-package Pages;
+package pages;
 
-import Classes.Receipt;
+import classes.Receipt;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -42,7 +42,7 @@ public class StartPage {
             // Open file
             if (selectedFile == JFileChooser.APPROVE_OPTION) {
                 String file = fileChooser.getSelectedFile().getName();
-                new MainPage(Receipt.get(file), new ArrayList<>(), 0);
+                new MainPage(Receipt.get(file), new ArrayList<>());
                 frame.dispose();
             } else {
                 JOptionPane.showMessageDialog(frame, "There was an issue preparing your file");
