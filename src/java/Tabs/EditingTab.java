@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class EditingTab extends JPanel {
     final List<Integer> currentSelection = new ArrayList<>();
     final JTextField editTextField = new JTextField();
@@ -19,53 +20,41 @@ public class EditingTab extends JPanel {
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
 
-    public EditingTab(JFrame frame, List<String> receipt) {
+    public EditingTab(JFrame frame, List<String> receipt, List<String> labels) {
+        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
+        list.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent event) {
+                mouseSelection(event);
+                buttonsValid(receipt);
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(list);
         buttonsValid(receipt); // Disable buttons if no selections made
 
         addButton.addActionListener(e -> {
             receipt.add(currentSelection.get(0), editTextField.getText());
-            resetTabs(frame, receipt);
+            resetTabs(frame, receipt, labels);
         });
 
         editButton.addActionListener(e -> {
             int editIndex = currentSelection.get(0);
             receipt.set(editIndex, editTextField.getText());
-            resetTabs(frame, receipt);
+            resetTabs(frame, receipt, labels);
         });
 
         deleteButton.addActionListener(e -> {
             for (int index : currentSelection) {
                 receipt.remove(index);
             }
-            resetTabs(frame, receipt);
+            resetTabs(frame, receipt, labels);
         });
 
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
-        list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent event) {
-                @SuppressWarnings("unchecked")
-                JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
-
-                // Get the selected item
-                int listIndex = list.locationToIndex(event.getPoint());
-                CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
-
-                item.setSelected(!item.isSelected());
-                list.repaint(list.getCellBounds(listIndex, listIndex));
-
-                // Update tracking of current selections
-                if (item.isSelected()) {
-                    currentSelection.add(listIndex);
-                } else {
-                    currentSelection.remove((Integer) listIndex);
-                }
-
-                buttonsValid(receipt);
-            }
-        });
-
-        displayPanel.add(new JScrollPane(list));
-        displayPanel.setPreferredSize(new Dimension(350, 400)); // Optimised for receipt
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
+        scrollPane.setPreferredSize(new Dimension(350, 490)); // Optimised for receipt
+        displayPanel.add(scrollPane);
+        displayPanel.setBackground(Color.WHITE);
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
@@ -79,9 +68,28 @@ public class EditingTab extends JPanel {
         this.setVisible(true);
     }
 
-    private void resetTabs(JFrame frame, List<String> receipt) {
+    private void mouseSelection(MouseEvent event){
+        @SuppressWarnings("unchecked")
+        JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
+
+        // Get the selected item
+        int listIndex = list.locationToIndex(event.getPoint());
+        CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
+
+        item.setSelected(!item.isSelected());
+        list.repaint(list.getCellBounds(listIndex, listIndex));
+
+        // Update tracking of current selections
+        if (item.isSelected()) {
+            currentSelection.add(listIndex);
+        } else {
+            currentSelection.remove((Integer) listIndex);
+        }
+    }
+
+    private void resetTabs(JFrame frame, List<String> receipt, List<String> labels) {
         frame.dispose();
-        new MainPage(receipt, 0);
+        new MainPage(receipt, labels, 1);
     }
 
     // Hide buttons until valid selection made

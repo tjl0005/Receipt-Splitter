@@ -5,10 +5,9 @@ import net.sourceforge.tess4j.TesseractException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,16 +22,60 @@ public class Receipt {
         }
     }
 
-    public static void writeToFile(List<String> textToWrite, String fileName) {
+    public static void writeToFile(List<String> textToWrite, String userID, String fileName) {
         try {
-            FileWriter writer = new FileWriter("Receipts/Edited/" + fileName + ".txt");
-            for (String str : textToWrite) {
-                writer.write(str + System.lineSeparator());
+            String directory = "Receipts/" + userID + "/";
+            File file = new File(directory);
+
+            // If user directory does not exist create new folder
+            if (file.exists() | file.mkdir()) {
+                FileWriter writer = new FileWriter(directory + fileName + ".txt");
+                for (String str : textToWrite) {
+                    writer.write(str + System.lineSeparator());
+                }
+                writer.close();
             }
-            writer.close();
         } catch (IOException e) {
-            System.out.println("Could not save file");
+            System.out.println("Error opening file");
         }
+    }
+
+    public static List<String> getReceiptNames(String userID){
+        List<String> results = new ArrayList<>();
+
+        // Only get txt files
+        FilenameFilter textFilter = (dir, name) -> name.toLowerCase().endsWith(".txt");
+        File[] files = new File("Receipts/" + userID + "/").listFiles(textFilter);
+
+        if (Arrays.toString(files).equals("[]") | files == null){
+            System.out.println("No files found");
+            return null;
+        }
+
+        for (File file : files) {
+            if (file.isFile()) {
+                results.add(file.getName());
+            }
+        }
+
+        return results;
+    }
+
+    public static List<String> getReceiptFile(String fileDirectory) {
+        List<String> contents = new ArrayList<>();
+
+        try (BufferedReader inputStream = new BufferedReader(
+                new FileReader(fileDirectory))) {
+                String line;
+
+            while ((line = inputStream.readLine()) != null) {
+                contents.add(line);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        return contents;
     }
 
     private static List<String> readPicture(String fileName) {

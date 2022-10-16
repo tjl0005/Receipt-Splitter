@@ -11,6 +11,8 @@ public class CheckboxListRenderer extends JCheckBox implements ListCellRenderer<
         setEnabled(list.isEnabled());
         setSelected(value.isSelected());
         setText(value.toString());
+//        setHorizontalAlignment(JLabel.CENTER);
+        setBackground(Color.WHITE);
         return this;
     }
 
