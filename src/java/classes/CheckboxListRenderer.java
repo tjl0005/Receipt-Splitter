@@ -25,11 +25,13 @@ public class CheckboxListRenderer extends JCheckBox implements ListCellRenderer<
             this.label = label;
         }
 
-        public static JList<CheckboxListItem> generateList(java.util.List<String> receiptList) {
+        public static JList<CheckboxListItem> generateList(DefaultListModel<String> receiptModel) {
             DefaultListModel<CheckboxListItem> myList = new DefaultListModel<>();
 
-            for (String s : receiptList) {
-                myList.addElement(new CheckboxListItem(s));
+
+            for (int i=0;i < receiptModel.size();i++)
+            {
+                myList.addElement(new CheckboxListItem(receiptModel.get(i)));
             }
 
             JList<CheckboxListItem> list = new JList<>(myList);

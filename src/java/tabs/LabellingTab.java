@@ -1,7 +1,6 @@
 package tabs;
 
 import classes.CheckboxListRenderer;
-import pages.MainPage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,22 +8,21 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class LabellingTab extends JPanel {
     List<Integer> currentSelection = new ArrayList<>(); // Store selected indexes of selected lines
+    JScrollPane scrollPane = new JScrollPane();
     final JTextField labelTextField = new JTextField("My Label");
     final JButton labelButton = new JButton("Add Label");
     final JButton removeButton = new JButton("Remove Label");
     final JPanel buttonPanel = new JPanel(new FlowLayout());
     final JPanel displayPanel = new JPanel(new GridLayout());
-    JScrollPane scrollPane = new JScrollPane();
 
-    public LabellingTab( MainPage.DefaultListModel labelModel, MainPage.DefaultListModel receiptModel) {
-        List<String> receipt = receiptModel.getValue();
-        List<String> labels = labelModel.getValue();
 
-        setScrollPane(receipt);
+    public LabellingTab(Map<String, Double> labelMap, DefaultListModel<String> receiptModel) {
+        setScrollPane(receiptModel);
 
         labelButton.setEnabled(currentSelection.size() > 0);
         removeButton.setEnabled(currentSelection.size() > 0);
@@ -33,27 +31,25 @@ public class LabellingTab extends JPanel {
             String newLabel = "<" + labelTextField.getText() + "> ";
 
             // Ensure label model does not get overwhelmed, needs updating
-            if (!labels.contains(newLabel)){
-                labels.add(newLabel);
-                labelModel.setValue(labels);
+            if (!labelMap.containsKey(newLabel)){
+                labelMap.put(newLabel, 0.00);
             }
             for (int index : currentSelection) {
-                receipt.set(index, newLabel + receipt.get(index));
+                receiptModel.set(index, newLabel + receiptModel.get(index));
             }
-            receiptModel.setValue(receipt);
-            setScrollPane(receiptModel.getValue());
+            setScrollPane(receiptModel);
         });
 
         removeButton.addActionListener(e -> {
-            // TODO: Need to track amount of labels
             for (int index : currentSelection) {
-                String line = receipt.get(index);
+                String line = receiptModel.get(index);
+
                 if (line.contains("<") && line.contains(">")){
-                    receipt.set(index, line.replaceAll("<.*>", ""));
+                    String newLine = line.replaceAll("<.*>", "");
+                    receiptModel.set(index, newLine);
                 }
             }
-            receiptModel.setValue(receipt);
-            setScrollPane(receiptModel.getValue());
+            setScrollPane(receiptModel);
         });
 
         displayPanel.setBackground(Color.WHITE);
@@ -70,13 +66,14 @@ public class LabellingTab extends JPanel {
         this.setVisible(true);
     }
 
-    public void setScrollPane(List<String> receipt){
+    public void setScrollPane(DefaultListModel<String> receiptModel){
         // Removing the old scrollPane and resetting the current selection
         displayPanel.remove(scrollPane);
         currentSelection = new ArrayList<>();
 
         // Set up the list
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
+        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.
+                CheckboxListItem.generateList(receiptModel);
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
                 mouseSelection(event);

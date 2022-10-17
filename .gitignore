@@ -1,0 +1,26 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Target
+/target/.*
+/Assets/Page Breakdown.docx
+/target/classes/classes/Receipt.class
+/out/artifacts/Receipt_Splitter_jar/Receipt Splitter.jar
+/target/classes/tabs/ReceiptsTab.class
+/target/classes/pages/StartPage.class
+/.idea/workspace.xml
+/target/classes/classes/CheckboxListRenderer$CheckboxListItem.class
+/target/classes/classes/CheckboxListRenderer.class
+/target/classes/tabs/CostsTab.class
+/target/classes/tabs/EditingTab$1.class
+/target/classes/tabs/EditingTab.class
+/target/classes/tabs/LabellingTab$1.class
+/target/classes/tabs/LabellingTab.class
+/target/classes/Main.class
+/target/classes/pages/MainPage.class
+/target/classes/META-INF/MANIFEST.MF

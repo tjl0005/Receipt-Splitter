@@ -6,7 +6,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class StartPage {
     final JFrame frame = new JFrame();
@@ -42,7 +42,11 @@ public class StartPage {
             // Open file
             if (selectedFile == JFileChooser.APPROVE_OPTION) {
                 String file = fileChooser.getSelectedFile().getName();
-                new MainPage(Receipt.get(file), new ArrayList<>());
+
+                DefaultListModel<String> receiptModel = new DefaultListModel<>();
+                receiptModel.addAll(Receipt.get(file));
+
+                new MainPage(receiptModel, new LinkedHashMap<>());
                 frame.dispose();
             } else {
                 JOptionPane.showMessageDialog(frame, "There was an issue preparing your file");

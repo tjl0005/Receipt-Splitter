@@ -1,7 +1,6 @@
 package tabs;
 
 import classes.CheckboxListRenderer;
-import pages.MainPage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,37 +12,36 @@ import java.util.List;
 
 public class EditingTab extends JPanel {
     List<Integer> currentSelection = new ArrayList<>();
+
+    JScrollPane scrollPane = new JScrollPane();
     final JTextField editTextField = new JTextField();
-    final JPanel displayPanel = new JPanel(new BorderLayout());
-    final JPanel buttonPanel = new JPanel(new FlowLayout());
     final JButton editButton = new JButton("Edit");
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
-    JScrollPane scrollPane = new JScrollPane();
 
-    public EditingTab(MainPage.DefaultListModel receiptModel) {
-        List<String> receipt = receiptModel.getValue(); // Copying to make editing easier (need to improve this)
-        setScrollPane(receiptModel.getValue()); // This is the initial setup
-        buttonsValid(receipt); // Buttons initially disabled
+    final JPanel displayPanel = new JPanel(new BorderLayout());
+    final JPanel buttonPanel = new JPanel(new FlowLayout());
+
+
+    public EditingTab(DefaultListModel<String> receiptModel) {
+        setScrollPane(receiptModel); // This is the initial setup
+        buttonsValid(receiptModel); // Buttons initially disabled
 
         addButton.addActionListener(e -> {
-            receipt.add(currentSelection.get(0), editTextField.getText()); // Adding value to receipt copy
-            receiptModel.setValue(receipt); // Updating model with receipt copy
-            setScrollPane(receiptModel.getValue()); // Now updating scroll pane
+            receiptModel.add(currentSelection.get(0), editTextField.getText()); // Updating model with receipt copy
+            setScrollPane(receiptModel); // Now updating scroll pane
         });
 
         editButton.addActionListener(e -> {
-            receipt.set(currentSelection.get(0), editTextField.getText());
-            receiptModel.setValue(receipt);
-            setScrollPane(receiptModel.getValue());
+            receiptModel.set(currentSelection.get(0), editTextField.getText());
+            setScrollPane(receiptModel);
         });
 
         deleteButton.addActionListener(e -> {
             for (int index : currentSelection) {
-                receipt.remove(index);
+                receiptModel.remove(index);
             }
-            receiptModel.setValue(receipt);
-            setScrollPane(receiptModel.getValue());
+            setScrollPane(receiptModel);
         });
 
         displayPanel.setBackground(Color.WHITE);
@@ -80,17 +78,17 @@ public class EditingTab extends JPanel {
         }
     }
 
-    public void setScrollPane(List<String> receipt){
+    public void setScrollPane(DefaultListModel<String> receiptModel){
         // Removing the old scrollPane and resetting the current selection
         displayPanel.remove(scrollPane);
         currentSelection = new ArrayList<>();
 
         // Set up the list
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receipt);
+        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receiptModel);
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
                 mouseSelection(event);
-                buttonsValid(receipt);
+                buttonsValid(receiptModel);
             }
         });
 
@@ -106,7 +104,7 @@ public class EditingTab extends JPanel {
     }
 
     // Hide buttons until valid selection made
-    private void buttonsValid(List<String> receipt) {
+    private void buttonsValid(DefaultListModel<String> receipt) {
         editButton.setEnabled(currentSelection.size() == 1);
         addButton.setEnabled(currentSelection.size() == 1);
         deleteButton.setEnabled(currentSelection.size() > 0);

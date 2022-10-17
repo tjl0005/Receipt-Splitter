@@ -1,29 +1,30 @@
 package tabs;
 
-import pages.MainPage;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class CostsTab extends JPanel {
-    JComboBox<String> selectionBox = new JComboBox<>();
-    final JPanel displayPanel = new JPanel();
-    final JPanel tablePanel = new JPanel();
     final DefaultListModel<String> jList = new DefaultListModel<>();
+
+    JComboBox<String> selectionBox = new JComboBox<>();
+
     final JScrollPane scrollPane = new JScrollPane(new JList<>(jList));
     JScrollPane tablePane = new JScrollPane();
+    final JPanel displayPanel = new JPanel();
+    final JPanel tablePanel = new JPanel();
 
-    public CostsTab(MainPage.DefaultListModel labelModel, MainPage.DefaultListModel receiptModel) {
+    public CostsTab(Map<String, Double> labelMap, DefaultListModel<String> receiptModel) {
         scrollPane.setPreferredSize(new Dimension(380, 200));
-        tablePanel.setPreferredSize(new Dimension(380, 300));
         scrollPane.setBackground(Color.WHITE);
+        tablePanel.setBackground(Color.WHITE);
 
-        setComboBox(labelModel, receiptModel);
-        setTable(labelModel, receiptModel);
+        setComboBox(labelMap, receiptModel);
+        setTable(labelMap, receiptModel);
 
         displayPanel.add(selectionBox);
         displayPanel.add(scrollPane);
@@ -36,32 +37,42 @@ public class CostsTab extends JPanel {
         this.setVisible(true);
     }
 
-    public void setComboBox(MainPage.DefaultListModel labelModel, MainPage.DefaultListModel receiptModel){
+    // Get all lines that have the given label
+    public List<String> getLabelledLines(String label, DefaultListModel<String> receiptModel){
+        List<String> labelledLines = new ArrayList<>();
+
+        for (int i=0;i < receiptModel.size();i++) {
+            String line = receiptModel.get(i);
+            if (line.contains(label)) {
+                labelledLines.add(line);
+            }
+        }
+        labelledLines.replaceAll(s -> s.replaceAll("<.*> ", ""));  // Remove label prefix from lines
+        return labelledLines;
+    }
+
+    public void setComboBox(Map<String, Double> labelMap, DefaultListModel<String> receiptModel){
         // Remove old versions
         displayPanel.remove(selectionBox);
         displayPanel.remove(scrollPane);
 
-        // Setup combobox
-        selectionBox = new JComboBox<>(labelModel.getValue().toArray(new String[0]));
-        selectionBox.addActionListener(e -> {
-            List<String> labels = labelModel.getValue();
-            int selIndex = selectionBox.getSelectedIndex();
-            List<String> labelledLines = getLabelledLines(labelModel.getValue().get(selIndex), receiptModel.getValue());
+        List<String> labels = labelMap.keySet().stream().toList();
 
-            if (labelledLines.isEmpty()) {
-                labels.remove(selIndex);
-                labelModel.setValue(labels);
-            } else {
-                jList.removeAllElements();
-                jList.addAll(labelledLines);
-            }
+        // Setup combobox
+        selectionBox = new JComboBox<>(labels.toArray(new String[0]));
+        selectionBox.addActionListener(e -> {
+            int selIndex = selectionBox.getSelectedIndex();
+            List<String> labelledLines = getLabelledLines(labels.get(selIndex), receiptModel);
+
+            jList.removeAllElements();
+            jList.addAll(labelledLines);
+
             this.revalidate();
         });
 
         // Display first label contents by default
-        List<String> currentLabels = labelModel.getValue();
-        if (!currentLabels.isEmpty()){
-            List<String> defaultLines = getLabelledLines(labelModel.getValue().get(0), receiptModel.getValue());
+        if (!labels.isEmpty()){
+            List<String> defaultLines = getLabelledLines(labels.get(0), receiptModel);
             jList.removeAllElements();
             jList.addAll(defaultLines);
         }
@@ -73,41 +84,41 @@ public class CostsTab extends JPanel {
         displayPanel.repaint();
     }
 
-    // Get all lines that have the given label
-    public List<String> getLabelledLines(String label, List<String> receipt){
-        List<String> labelledLines = new ArrayList<>();
-        for (String line : receipt) {
-            if (line.contains(label)) {
-                labelledLines.add(line);
-            }
-        }
-        labelledLines.replaceAll(s -> s.replaceAll("<.*> ", ""));  // Remove label prefix from lines
-        return labelledLines;
-    }
-
-
-    public void setTable(MainPage.DefaultListModel labelModel, MainPage.DefaultListModel receiptModel){
-        // TODO: Figure out cost thing
-        // TODO: Get cell update for total cost
+    public void setTable(Map<String, Double> labelMap, DefaultListModel<String> receiptModel){
         tablePanel.remove(tablePane);
         DefaultTableModel model = new DefaultTableModel();
 
         model.addColumn("Label"); // Label reference
         model.addColumn("No."); // Number of lines labelled with this reference
-        model.addColumn("Cost"); // Total cost of this label
+        model.addColumn("Cost"); // Total cost of this label, user decided
 
-        for (String currentLabel : labelModel.getValue()) {
-            int labelCount = getLabelledLines(currentLabel, receiptModel.getValue()).size();
+        List<String> labels = labelMap.keySet().stream().toList();
+
+        for (int i=0;i < labelMap.size();i++){
+            String currentLabel = labels.get(i);
+            int labelCount = getLabelledLines(currentLabel, receiptModel).size();
+
             String clearLabel = currentLabel.substring(1, currentLabel.length() - 2); // Removing < >
-            model.addRow(new Object[]{clearLabel, labelCount, "N/A"});
+            model.addRow(new Object[]{clearLabel, labelCount, labelMap.get(currentLabel)});
         }
 
         JTable table = new JTable(model);
 
+        model.addTableModelListener(e -> {
+            if(table.isEditing() && table.getSelectedColumn() == 2){
+                String label = labels.get(table.getSelectedRow());
+                Double newCost = Double.parseDouble(table.getValueAt(table.getSelectedRow(), 2).toString());
+                labelMap.put(label, newCost);
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Only edits to total cost are saved");
+            }
+        });
+
         tablePane = new JScrollPane(table);
+        tablePane.setPreferredSize(new Dimension(380, 300));
         tablePanel.add(tablePane);
     }
-
 }
 
 
