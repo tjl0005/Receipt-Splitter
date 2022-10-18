@@ -14,14 +14,12 @@ public class EditingTab extends JPanel {
     List<Integer> currentSelection = new ArrayList<>();
 
     JScrollPane scrollPane = new JScrollPane();
+    final JPanel displayPanel = new JPanel(new BorderLayout());
+    final JPanel buttonPanel = new JPanel(new FlowLayout());
     final JTextField editTextField = new JTextField();
     final JButton editButton = new JButton("Edit");
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
-
-    final JPanel displayPanel = new JPanel(new BorderLayout());
-    final JPanel buttonPanel = new JPanel(new FlowLayout());
-
 
     public EditingTab(DefaultListModel<String> receiptModel) {
         setScrollPane(receiptModel); // This is the initial setup

@@ -6,16 +6,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-// Set receipt model to the current selected receipt is
+// Currently cannot get saved PDF receipts, this will be implemented
 
 public class ReceiptsTab extends JPanel {
-    DefaultListModel<String> jList = new DefaultListModel<>();
-    List<String> allReceipts;
-    String userID;
+    final DefaultListModel<String> jList = new DefaultListModel<>();
+    final List<String> allReceipts;
+    final String userID;
 
     JComboBox<String> selectionBox = new JComboBox<>();
-    JScrollPane scrollPane = new JScrollPane(new JList<>(jList));
-    JPanel displayPanel = new JPanel();
+    final JScrollPane scrollPane = new JScrollPane(new JList<>(jList));
+    final JPanel displayPanel = new JPanel();
 
     public ReceiptsTab(String id, DefaultListModel<String> receipt) {
         userID = id;
@@ -65,15 +65,19 @@ public class ReceiptsTab extends JPanel {
             selectionBox.addActionListener(e -> {
                 int selIndex = selectionBox.getSelectedIndex();
                 jList.removeAllElements();
+                receipt.removeAllElements();
                 // Not selecting current receipt
                 if (selIndex != 0) {
                     String selectedReceipt = "Receipts/" + userID + "/" + allReceipts.get(selIndex);
-                    jList.addAll(Receipt.getReceiptFile(selectedReceipt));
+                    jList.addAll(Receipt.getReceiptTxtFile(selectedReceipt));
+                    receipt.addAll(Receipt.getReceiptTxtFile(selectedReceipt));
                 } else {
-                    for (int i=0;i < receipt.size();i++)
-                    {
-                        jList.addElement(receipt.get(i));
-                    }                }
+                    // Need a backup copy of the current receipt
+                    for (int i = 0; i < receipt.size(); i++) {
+                        jList.addElement(receipt.get(0));
+                        receipt.addElement(receipt.get(0));
+                    }
+                }
                 this.revalidate();
             });
             displayPanel.add(selectionBox);
