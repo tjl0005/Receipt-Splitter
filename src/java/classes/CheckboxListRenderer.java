@@ -11,7 +11,6 @@ public class CheckboxListRenderer extends JCheckBox implements ListCellRenderer<
         setEnabled(list.isEnabled());
         setSelected(value.isSelected());
         setText(value.toString());
-//        setHorizontalAlignment(JLabel.CENTER);
         setBackground(Color.WHITE);
         return this;
     }
@@ -27,7 +26,7 @@ public class CheckboxListRenderer extends JCheckBox implements ListCellRenderer<
 
         public static JList<CheckboxListItem> generateList(DefaultListModel<String> receiptModel) {
             DefaultListModel<CheckboxListItem> myList = new DefaultListModel<>();
-
+            myList.addElement(new CheckboxListItem( String.format("%55s", "Select All")));
 
             for (int i=0;i < receiptModel.size();i++)
             {

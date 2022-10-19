@@ -16,7 +16,7 @@ public class StartPage {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setBounds(300, 300, 300, 300);
         frame.setTitle("Open File");
-        frame.setIconImage(new ImageIcon("Assets/Logo.jpg").getImage());
+        frame.setIconImage(new ImageIcon("Assets/Logo.png").getImage());
         frame.setResizable(false);
 
         startButton.setBounds(125, 200, 250, 25);
@@ -44,7 +44,7 @@ public class StartPage {
                 String file = fileChooser.getSelectedFile().getName();
 
                 DefaultListModel<String> receiptModel = new DefaultListModel<>();
-                receiptModel.addAll(Receipt.get(file));
+                receiptModel.addAll(Receipt.get(file, true));
 
                 new MainPage(receiptModel, new LinkedHashMap<>());
                 frame.dispose();

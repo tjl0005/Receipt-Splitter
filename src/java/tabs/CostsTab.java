@@ -19,7 +19,7 @@ public class CostsTab extends JPanel {
     final JPanel tablePanel = new JPanel();
 
     public CostsTab(Map<String, Double> labelMap, DefaultListModel<String> receiptModel) {
-        scrollPane.setPreferredSize(new Dimension(380, 200));
+        scrollPane.setPreferredSize(new Dimension(380, 300));
         scrollPane.setBackground(Color.WHITE);
         tablePanel.setBackground(Color.WHITE);
 
@@ -93,8 +93,9 @@ public class CostsTab extends JPanel {
         model.addColumn("Cost"); // Total cost of this label, user decided
 
         List<String> labels = labelMap.keySet().stream().toList();
+        int noRows = labelMap.size();
 
-        for (int i=0;i < labelMap.size();i++){
+        for (int i=0; i < noRows; i++) {
             String currentLabel = labels.get(i);
             int labelCount = getLabelledLines(currentLabel, receiptModel).size();
 
@@ -103,6 +104,7 @@ public class CostsTab extends JPanel {
         }
 
         JTable table = new JTable(model);
+        table.setRowHeight(30);
 
         model.addTableModelListener(e -> {
             if(table.isEditing() && table.getSelectedColumn() == 2){
@@ -111,12 +113,12 @@ public class CostsTab extends JPanel {
                 labelMap.put(label, newCost);
             }
             else{
-                JOptionPane.showMessageDialog(this, "Only edits to total cost are saved");
+                JOptionPane.showMessageDialog(this, "Only edits to total cost will be saved");
             }
         });
 
         tablePane = new JScrollPane(table);
-        tablePane.setPreferredSize(new Dimension(380, 300));
+        tablePane.setPreferredSize(new Dimension(380, 150));
         tablePanel.add(tablePane);
     }
 }

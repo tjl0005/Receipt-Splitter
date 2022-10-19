@@ -3,6 +3,7 @@ package classes;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import javax.swing.*;
@@ -22,7 +23,8 @@ public class ReceiptPDF {
             // Equivalence of space taken by title
             int lines = 2;
             int pageNum = 1;
-            int totalPages = toWrite.size() / 31; // Rough estimation, known to sometimes be incorrect
+            int totalPages = toWrite.size() / 30; // Rough estimation, known to sometimes be incorrect
+            int defaultXOffset = 120;
 
             // Label breakdown takes another page or if less than a page taken
             if (!labels.isEmpty() | totalPages == 0){
@@ -31,41 +33,41 @@ public class ReceiptPDF {
             // Set font
             PDType1Font font = PDType1Font.HELVETICA;
             // First page
-            PDPage page = new PDPage();
+            PDPage page = new PDPage(PDRectangle.A5);
             doc.addPage(page);
             PDPageContentStream content = new PDPageContentStream(doc, page);
             // Adding a title
-            content.setFont(font, 20);
+            content.setFont(font, 14);
             content.beginText();
-            content.newLineAtOffset(250, 700); // Page margin + heading width
+            content.newLineAtOffset(150, 550); // Page margin + heading width
             content.showText("Your Receipt");
             content.endText();
             // Underline title, not calculating width as waste of resources
-            content.moveTo(250, 695);
-            content.lineTo(370, 695);
+            content.moveTo(155, 545);
+            content.lineTo(228, 545);
             content.stroke();
             // Prepare for standard content
-            content.setFont(font, 12);
+            content.setFont(font, 8);
             pageNum = addFooterDecorations(content, pageNum, totalPages, name);
 
             for (String line : toWrite) {
                 // Default text offset
-                int xOffset = 100;
-                float yOffset = 700 - 20f * lines;
-                content.setFont(font, 12);
+                int xOffset = defaultXOffset;
+                float yOffset = 555 - 15f * lines;
+                content.setFont(font, 8);
 
-                // Found 31 lines to be the max for a page and want separate page for label breakdown
-                if (lines == 31 | line.equals("Breakdown of Labels")){
+                // Found 35 lines to be the max for a page and want separate page for label breakdown
+                if (lines == 35 | line.equals("Breakdown of Labels")){
                     content.close(); // Close stream
                     // Shared aspects of each scenario
-                    PDPage newPage = new PDPage();
+                    PDPage newPage = new PDPage(PDRectangle.A5);
                     doc.addPage(newPage); // Retain now complete page
                     content = new PDPageContentStream(doc, newPage); // New stream with a blank page
                     pageNum = addFooterDecorations(content, pageNum, totalPages, name);
-                    yOffset = 700;
+                    yOffset = 555;
 
                     // A continuation of receipt or label breakdown
-                    if (lines == 31 && !line.equals("Breakdown of Labels")){
+                    if (lines == 35 && !line.equals("Breakdown of Labels")){
                         String pageType = "Receipt"; // Default
                         lines = 0;
 
@@ -79,24 +81,27 @@ public class ReceiptPDF {
                     // First label page, requires a heading
                     else {
                         // Offset for titles
-                        xOffset = 200;
+                        xOffset = 150;
                         lines = 1;
                         // Draw underline of heading. not calculating width due to waste of resources
-                        content.moveTo(200, 695);
-                        content.lineTo(373, 695);
+                        content.moveTo(155, 550);
+                        content.lineTo(275, 550);
                         content.stroke();
-                        content.setFont(font, 18); // Heading font size
+                        content.setFont(font, 14); // Heading font size
                     }
                 }
                 else {
                     if (labels.containsKey(line)){
-                        float width = font.getStringWidth(line) / 1000 * 14;
-                        content.moveTo(100, yOffset - 2); // Adjusting line y to be lower than the text y
-                        content.lineTo(80 + width, yOffset -2);
+                        float width = font.getStringWidth(line) / 1000 * 10;
+                        content.moveTo(50, yOffset - 2); // Adjusting line y to be lower than the text y
+                        content.lineTo(35 + width, yOffset -2);
                         content.stroke();
 
-                        content.setFont(font, 14);
+                        content.setFont(font, 10);
                         line = line.substring(1, line.length() - 2) + ":"; // Remove <> and add a colon
+                        // Change default xOffset to be closer to page border
+                        defaultXOffset = 50;
+                        xOffset = 50;
                     }
                 }
                 // Write the current line
@@ -130,8 +135,8 @@ public class ReceiptPDF {
                 toWrite.add(label);
                 toWrite.addAll(labelledLines);
                 // Label stats
-                toWrite.add("Amount: " + labelledLines.size());
-                toWrite.add("Cost: £" + labels.get(label));
+                toWrite.add("  Amount: " + labelledLines.size());
+                toWrite.add("  Cost: £" + labels.get(label));
                 toWrite.add(""); // Spacer
             }
         }
@@ -141,18 +146,18 @@ public class ReceiptPDF {
 
     public static int addFooterDecorations(PDPageContentStream content, int pageNum, int total, String name) {
         try {
-            content.setFont(PDType1Font.HELVETICA, 12);
+            content.setFont(PDType1Font.HELVETICA, 8);
             content.beginText();
-            content.newLineAtOffset(50, 30); // Write in bottom left
+            content.newLineAtOffset(30, 15); // Write in bottom left
             content.showText("Page " + pageNum + " of " + total);
-            content.newLineAtOffset(200, 0); // Write in bottom middle
+            content.newLineAtOffset(140, 0); // Write in bottom middle
             content.showText("Date: " + new SimpleDateFormat("dd/MM/yy").format(new Date()));
-            content.newLineAtOffset(250, 0); // Write in bottom right
+            content.newLineAtOffset(190, 0); // Write in bottom right
             content.showText(name);
             content.endText();
 
-            content.moveTo(0, 60);
-            content.lineTo(650, 60);
+            content.moveTo(0, 30);
+            content.lineTo(650, 30);
             content.stroke();
 
             pageNum++; // Update number of pages
@@ -167,12 +172,12 @@ public class ReceiptPDF {
     public static void addHeaderDecorations(PDPageContentStream content, String pageType){
         try{
             content.beginText();
-            content.newLineAtOffset(250, 750); // Write in top center
+            content.newLineAtOffset(160, 580); // Write in top center
             content.showText(pageType + " Continued"); // Mini-heading
             content.endText();
             // Line separator
-            content.moveTo(0, 740);
-            content.lineTo(650, 740);
+            content.moveTo(0, 570);
+            content.lineTo(450, 570);
             content.stroke();
         } catch (IOException e){
             System.out.println("Error adding header decorations");
@@ -184,7 +189,7 @@ public class ReceiptPDF {
 
         for (String line: receipt) {
             if (line.contains(label)) {
-                labelledLines.add("    • " + line);
+                labelledLines.add("      • " + line);
             }
         }
         labelledLines.replaceAll(s -> s.replaceAll("<.*> ", ""));  // Remove label prefix from lines

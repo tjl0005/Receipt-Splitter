@@ -18,6 +18,7 @@ public class EditingTab extends JPanel {
     final JPanel buttonPanel = new JPanel(new FlowLayout());
     final JTextField editTextField = new JTextField();
     final JButton editButton = new JButton("Edit");
+    final JButton centerButton = new JButton("Center");
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
 
@@ -30,14 +31,22 @@ public class EditingTab extends JPanel {
             setScrollPane(receiptModel); // Now updating scroll pane
         });
 
+        centerButton.addActionListener(e ->{
+            for (int index : currentSelection) {
+                String line = String.format("%52s", receiptModel.get(index)); // 52 is string width, can be a bit iffy
+                receiptModel.set(index, line);
+            }
+            setScrollPane(receiptModel);
+        });
+
         editButton.addActionListener(e -> {
             receiptModel.set(currentSelection.get(0), editTextField.getText());
             setScrollPane(receiptModel);
         });
 
         deleteButton.addActionListener(e -> {
-            for (int index : currentSelection) {
-                receiptModel.remove(index);
+            for (int i = 0; i < currentSelection.size(); i++){
+                receiptModel.remove(currentSelection.get(i) - i); // Using i as a counter to correct the old index
             }
             setScrollPane(receiptModel);
         });
@@ -47,6 +56,7 @@ public class EditingTab extends JPanel {
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(centerButton);
         buttonPanel.add(deleteButton);
         buttonPanel.setFocusable(false);
 
@@ -57,7 +67,7 @@ public class EditingTab extends JPanel {
         this.setVisible(true);
     }
 
-    private void mouseSelection(MouseEvent event){
+    private void mouseSelection(MouseEvent event) {
         @SuppressWarnings("unchecked") // No need to check cast
         JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
 
@@ -66,14 +76,25 @@ public class EditingTab extends JPanel {
         CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
 
         item.setSelected(!item.isSelected());
-        list.repaint(list.getCellBounds(listIndex, listIndex));
-
-        // Update tracking of current selections
-        if (item.isSelected()) {
-            currentSelection.add(listIndex);
+        if (listIndex == 0) {
+            currentSelection.clear();
+            for (int i = 1; i < list.getModel().getSize() - 1; i++) {
+                CheckboxListRenderer.CheckboxListItem current = list.getModel().getElementAt(i);
+                current.setSelected(!current.isSelected());
+                if (item.isSelected()) {
+                    currentSelection.add(i - 1);
+                }
+            }
         } else {
-            currentSelection.remove((Integer) listIndex);
+            listIndex--;
+            // Update tracking of current selections
+            if (item.isSelected()) {
+                currentSelection.add(listIndex);
+            } else {
+                currentSelection.remove((Integer) listIndex);
+            }
         }
+        list.repaint();
     }
 
     public void setScrollPane(DefaultListModel<String> receiptModel){
@@ -103,9 +124,10 @@ public class EditingTab extends JPanel {
 
     // Hide buttons until valid selection made
     private void buttonsValid(DefaultListModel<String> receipt) {
-        editButton.setEnabled(currentSelection.size() == 1);
-        addButton.setEnabled(currentSelection.size() == 1);
+        editButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
+        addButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
         deleteButton.setEnabled(currentSelection.size() > 0);
+        centerButton.setEnabled(currentSelection.size() > 0);
 
         if (currentSelection.size() == 1) {
             editTextField.setText(receipt.get(currentSelection.get(0)));

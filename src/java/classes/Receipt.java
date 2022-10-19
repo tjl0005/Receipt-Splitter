@@ -9,12 +9,15 @@ import javax.swing.*;
 import java.io.*;
 import java.util.*;
 
+
 public class Receipt {
-    public static List<String> get(String fileName) {
+    public static List<String> get(String fileName, boolean newFile) {
         String fileType = fileName.substring(fileName.length() - 3); // Get file extension
 
         if (Objects.equals(fileType, "pdf")) {
-            return new ArrayList<>(Receipt.readPDF(fileName));
+            return new ArrayList<>(Receipt.readPDF(fileName, newFile));
+        } else if (fileType.equals("txt")) {
+            return new ArrayList<>(Receipt.getReceiptTxtFile(fileName));
         } else {
             return new ArrayList<>(Receipt.translatePicture(fileName));
         }
@@ -50,7 +53,7 @@ public class Receipt {
         List<String> results = new ArrayList<>();
 
         // Only get txt files -> Will update for pdfs as well, so saved receipts can be viewed/edited further
-        FilenameFilter textFilter = (dir, name) -> name.toLowerCase().endsWith(".txt");
+        FilenameFilter textFilter = (dir, name) -> name.toLowerCase().endsWith(".txt") | name.toLowerCase().endsWith(".pdf");
         File[] files = new File("Receipts/" + userID + "/").listFiles(textFilter);
 
         if (Arrays.toString(files).equals("[]") | files == null){
@@ -60,6 +63,7 @@ public class Receipt {
 
         for (File file : files) {
             if (file.isFile()) {
+                System.out.println(file);
                 results.add(file.getName());
             }
         }
@@ -84,7 +88,7 @@ public class Receipt {
 
     private static List<String> translatePicture(String fileName) {
         Tesseract ocr = new Tesseract();
-        ocr.setTessVariable("user_defined_dpi", "300");
+        ocr.setVariable("user_defined_dpi", "300");
         String receipt = "";
         try {
             ocr.setDatapath("tessdata");
@@ -98,10 +102,16 @@ public class Receipt {
         return List.of(receipt.split("\\R"));
     }
 
-    private static List<String> readPDF(String fileName) {
+    private static List<String> readPDF(String file, boolean newFile) {
         String receipt = "";
+
+        // This will be deprecated
+        if (newFile){
+            file = "Receipts/Original/" + file;
+        }
+
         try {
-            PDDocument document = PDDocument.load(new File("Receipts/Original/" + fileName));
+            PDDocument document = PDDocument.load(new File(file));
             if (!document.isEncrypted()) {
                 PDFTextStripper stripper = new PDFTextStripper();
                 receipt = stripper.getText(document);

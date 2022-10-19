@@ -6,7 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-// Currently cannot get saved PDF receipts, this will be implemented
 
 public class ReceiptsTab extends JPanel {
     final DefaultListModel<String> jList = new DefaultListModel<>();
@@ -18,27 +17,19 @@ public class ReceiptsTab extends JPanel {
     final JPanel displayPanel = new JPanel();
 
     public ReceiptsTab(String id, DefaultListModel<String> receipt) {
+
         userID = id;
-
         allReceipts = Receipt.getReceiptNames(userID);
+        populateJList(receipt);
 
-        if (allReceipts == null){
+        if (allReceipts == null) {
             this.add(new JLabel("No saved receipts yet"));
-            for (int i=0;i < receipt.size();i++)
-            {
-                jList.addElement(receipt.get(i));
-            }
             displayPanel.add(scrollPane);
-        }
-        else{
+        } else {
             // Initial State
             if (!allReceipts.contains("Current Receipt")) {
                 // Update list of saved receipts with current receipt
                 allReceipts.add(0, "Current Receipt");
-                for (int i=0;i < receipt.size();i++)
-                {
-                    jList.addElement(receipt.get(i));
-                }
             }
 
             setComboBox(receipt);
@@ -53,47 +44,45 @@ public class ReceiptsTab extends JPanel {
         this.setVisible(true);
     }
 
-    public void setComboBox(DefaultListModel<String> receipt){
+    public void setComboBox(DefaultListModel<String> receipt) {
         // Remove old versions
         displayPanel.remove(scrollPane);
 
         if (allReceipts != null) {
             displayPanel.remove(selectionBox);
-
             // Setup combobox
             selectionBox = new JComboBox<>(allReceipts.toArray(new String[0]));
             selectionBox.addActionListener(e -> {
                 int selIndex = selectionBox.getSelectedIndex();
                 jList.removeAllElements();
-                receipt.removeAllElements();
                 // Not selecting current receipt
                 if (selIndex != 0) {
                     String selectedReceipt = "Receipts/" + userID + "/" + allReceipts.get(selIndex);
-                    jList.addAll(Receipt.getReceiptTxtFile(selectedReceipt));
-                    receipt.addAll(Receipt.getReceiptTxtFile(selectedReceipt));
+                    jList.addAll(Receipt.get(selectedReceipt, false));
+                    receipt.addAll(Receipt.get(selectedReceipt, false));
                 } else {
-                    // Need a backup copy of the current receipt
-                    for (int i = 0; i < receipt.size(); i++) {
-                        jList.addElement(receipt.get(0));
-                        receipt.addElement(receipt.get(0));
-                    }
+                    populateJList(receipt);
                 }
                 this.revalidate();
             });
             displayPanel.add(selectionBox);
         }
 
-    // Display first label contents by default
-    jList.removeAllElements();
-        for (int i=0;i < receipt.size();i++)
-        {
+        // Display first label contents by default
+        jList.removeAllElements();
+        populateJList(receipt);
+
+        // Refresh with updated display panel
+        displayPanel.add(scrollPane);
+        displayPanel.revalidate();
+        displayPanel.repaint();
+    }
+
+    public void populateJList(DefaultListModel<String> receipt) {
+        for (int i = 0; i < receipt.size(); i++) {
             jList.addElement(receipt.get(i));
         }
-    // Refresh with updated display panel
-    displayPanel.add(scrollPane);
-    displayPanel.revalidate();
-    displayPanel.repaint();
-}
+    }
 }
 
 

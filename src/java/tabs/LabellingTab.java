@@ -53,7 +53,7 @@ public class LabellingTab extends JPanel {
         });
 
         displayPanel.setBackground(Color.WHITE);
-        displayPanel.setPreferredSize(new Dimension(350, 490)); // Optimised for receipt
+        displayPanel.setPreferredSize(new Dimension(350, 600)); // Optimised for receipt
 
         buttonPanel.add(labelButton);
         buttonPanel.add(removeButton);
@@ -93,7 +93,7 @@ public class LabellingTab extends JPanel {
         displayPanel.repaint();
     }
 
-    private void mouseSelection(MouseEvent event){
+    private void mouseSelection(MouseEvent event) {
         @SuppressWarnings("unchecked") // No need to check cast
         JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
 
@@ -102,13 +102,24 @@ public class LabellingTab extends JPanel {
         CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
 
         item.setSelected(!item.isSelected());
-        list.repaint(list.getCellBounds(listIndex, listIndex));
-
-        // Update tracking of current selections
-        if (item.isSelected()) {
-            currentSelection.add(listIndex);
+        if (listIndex == 0) {
+            currentSelection.clear();
+            for (int i = 1; i < list.getModel().getSize() - 1; i++) {
+                CheckboxListRenderer.CheckboxListItem current = list.getModel().getElementAt(i);
+                current.setSelected(!current.isSelected());
+                if (item.isSelected()) {
+                    currentSelection.add(i - 1);
+                }
+            }
         } else {
-            currentSelection.remove((Integer) listIndex);
+            listIndex--;
+            // Update tracking of current selections
+            if (item.isSelected()) {
+                currentSelection.add(listIndex);
+            } else {
+                currentSelection.remove((Integer) listIndex);
+            }
         }
+        list.repaint();
     }
 }
