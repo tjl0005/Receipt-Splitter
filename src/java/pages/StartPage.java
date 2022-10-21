@@ -1,12 +1,13 @@
 package pages;
 
-import classes.Receipt;
+import receipt.Prepare;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.LinkedHashMap;
+
 
 public class StartPage {
     final JFrame frame = new JFrame();
@@ -35,16 +36,15 @@ public class StartPage {
 
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileFilter(typeFilter);
-            fileChooser.setCurrentDirectory(new File("Receipts/Original/"));
+            fileChooser.setCurrentDirectory(new File("Receipts/Example/"));
             // Get user to select file
             int selectedFile = fileChooser.showOpenDialog(null);
 
             // Open file
             if (selectedFile == JFileChooser.APPROVE_OPTION) {
-                String file = fileChooser.getSelectedFile().getName();
-
+                String file = String.valueOf(fileChooser.getSelectedFile());
                 DefaultListModel<String> receiptModel = new DefaultListModel<>();
-                receiptModel.addAll(Receipt.get(file, true));
+                receiptModel.addAll(Prepare.get(file));
 
                 new MainPage(receiptModel, new LinkedHashMap<>());
                 frame.dispose();

@@ -1,4 +1,4 @@
-package classes;
+package receipt;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -7,6 +7,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -14,10 +16,66 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class ReceiptPDF {
-    public static void saveAsPDF(DefaultListModel<String> list, Map<String, Double> labels, String dir, String name) {
+public class SaveFinal {
+    public static List<String> prepareContents(DefaultListModel<String> list, Map<String, Double> labels){
+        List<String> toWrite = new ArrayList<>(); // Store all contents in list for easier writing
+
+        // Receipt contents
+        for (int i = 0; i < list.size(); i++) {
+            toWrite.add(list.get(i));
+        }
+
+        // Label breakdown section
+        if (!labels.isEmpty()) {
+            toWrite.add("Breakdown of Labels"); // Heading
+            // Adding labels, their lines and the cost of the label
+            for (String label : labels.keySet().stream().toList()) {
+                List<String> labelledLines = getLabelledLines(label, toWrite);
+                toWrite.add(label);
+                toWrite.addAll(labelledLines);
+                // Label stats
+                toWrite.add("  Amount: " + labelledLines.size());
+                toWrite.add("  Cost: £" + labels.get(label));
+                toWrite.add(""); // Spacer
+            }
+        }
+
+        return toWrite;
+    }
+
+    public static void asTXT(DefaultListModel<String> text, Map<String, Double> labels, String name){
+        try {
+            String directory = "Receipts/OpenBook/";
+            File file = new File(directory);
+
+            // If users directory does not exist create new folder
+            if (file.exists() | file.mkdir()) {
+                FileWriter writer = new FileWriter(directory + name + ".txt");
+
+                // Write receipt contents
+                for (int i = 0; i < text.size(); i++) {
+                    writer.write(text.get(i) + System.lineSeparator());
+                }
+                // Write labelMap contents
+                writer.write("Label Breakdown" + System.lineSeparator());
+                for (String label: labels.keySet().stream().toList()){
+                    writer.write(label.substring(1, label.length() - 2) + System.lineSeparator());
+                    writer.write(labels.get(label) + System.lineSeparator());
+                }
+                writer.close();
+            }
+        } catch (IOException e) {
+            System.out.println("Error opening file");
+        }
+    }
+
+    public static void asPDF(DefaultListModel<String> list, Map<String, Double> labels, String name) {
         List<String> toWrite = prepareContents(list, labels);
-        String directory = "Receipts/" + dir + "/" + name + ".pdf";
+        String directory = "Receipts/OpenBook/" + name + ".pdf";
+
+        if (new File("Receipts/OpenBook/").mkdir()){
+            System.out.println("Creating directory");
+        }
 
         try (PDDocument doc = new PDDocument()) {
             // Equivalence of space taken by title
@@ -68,7 +126,7 @@ public class ReceiptPDF {
 
                     // A continuation of receipt or label breakdown
                     if (lines == 35 && !line.equals("Breakdown of Labels")){
-                        String pageType = "Receipt"; // Default
+                        String pageType = "receipt"; // Default
                         lines = 0;
 
                         // If line ends with colon or starts with bullet point then it's a label line
@@ -118,30 +176,19 @@ public class ReceiptPDF {
         }
     }
 
-    public static List<String> prepareContents(DefaultListModel<String> list, Map<String, Double> labels){
-        List<String> toWrite = new ArrayList<>(); // Store all contents in list for easier writing
-
-        // Receipt contents
-        for (int i = 0; i < list.size(); i++) {
-            toWrite.add(list.get(i));
+    public static void addHeaderDecorations(PDPageContentStream content, String pageType){
+        try{
+            content.beginText();
+            content.newLineAtOffset(160, 580); // Write in top center
+            content.showText(pageType + " Continued"); // Mini-heading
+            content.endText();
+            // Line separator
+            content.moveTo(0, 570);
+            content.lineTo(450, 570);
+            content.stroke();
+        } catch (IOException e){
+            System.out.println("Error adding header decorations");
         }
-
-        // Label breakdown section
-        if (!labels.isEmpty()) {
-            toWrite.add("Breakdown of Labels"); // Heading
-            // Adding labels, their lines and the cost of the label
-            for (String label : labels.keySet().stream().toList()) {
-                List<String> labelledLines = getLabelledLines(label, toWrite);
-                toWrite.add(label);
-                toWrite.addAll(labelledLines);
-                // Label stats
-                toWrite.add("  Amount: " + labelledLines.size());
-                toWrite.add("  Cost: £" + labels.get(label));
-                toWrite.add(""); // Spacer
-            }
-        }
-
-        return toWrite;
     }
 
     public static int addFooterDecorations(PDPageContentStream content, int pageNum, int total, String name) {
@@ -167,21 +214,6 @@ public class ReceiptPDF {
         }
 
         return pageNum;
-    }
-
-    public static void addHeaderDecorations(PDPageContentStream content, String pageType){
-        try{
-            content.beginText();
-            content.newLineAtOffset(160, 580); // Write in top center
-            content.showText(pageType + " Continued"); // Mini-heading
-            content.endText();
-            // Line separator
-            content.moveTo(0, 570);
-            content.lineTo(450, 570);
-            content.stroke();
-        } catch (IOException e){
-            System.out.println("Error adding header decorations");
-        }
     }
 
     public static List<String> getLabelledLines(String label, List<String> receipt){

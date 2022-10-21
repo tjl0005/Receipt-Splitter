@@ -1,113 +1,150 @@
 package pages;
 
-import classes.Receipt;
-import classes.ReceiptPDF;
-import tabs.*;
+import receipt.SaveFinal;
+import receipt.Track;
+import tabs.CostsTab;
+import tabs.EditingTab;
+import tabs.LabellingTab;
+import tabs.ReceiptsTab;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+
 
 public class MainPage {
-    final ImageIcon img = new ImageIcon("Assets/Logo.jpg");
     final JFrame frame = new JFrame();
     final JTabbedPane tabbedPane = new JTabbedPane();
-    final JLabel userID = new JLabel("User"); // Not yet implemented
-    final JButton saveButton = new JButton("Save");
-    final JButton resetButton = new JButton("New Receipt");
+    JMenuItem undo = new JMenuItem("Undo");
+    JMenuItem redo = new JMenuItem("Redo");
 
-    public MainPage(DefaultListModel<String> receiptModel, Map<String, Double> labelMap) {
+    MainPage(DefaultListModel<String> receipt, Map<String, Double> labels) {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLayout(new GridLayout());
         frame.setSize(400, 590);
         frame.setTitle("Receipt Splitter");
-        frame.setIconImage(img.getImage());
-        frame.setResizable(false);
-
-        setupMenu(frame, receiptModel, labelMap);
+        frame.setIconImage(new ImageIcon("Assets/Logo.png").getImage());
+        frame.setResizable(false); // Application setup for receipt size documents
+        frame.setBackground(Color.decode("#ce8e8e7"));
 
         // Declare tabs outside tabbedPane so they can be updated
-        ReceiptsTab receiptsTab = new ReceiptsTab(userID.getText(), receiptModel);
-        EditingTab editTab = new EditingTab(receiptModel);
-        LabellingTab labellingTab =  new LabellingTab(labelMap, receiptModel);
-        CostsTab costsTab = new CostsTab(labelMap, receiptModel);
+        ReceiptsTab receiptsTab = new ReceiptsTab(receipt);
+        EditingTab editTab = new EditingTab(receipt);
+        LabellingTab labellingTab = new LabellingTab(labels, receipt);
+        CostsTab costsTab = new CostsTab(labels, receipt);
 
-        tabbedPane.add("All Receipts", receiptsTab);
+        setupMenu(frame, receipt, labels); // Initial JMenu setup
+
+        tabbedPane.add("Receipts", receiptsTab);
         tabbedPane.add("Edit", editTab);
         tabbedPane.add("Label", labellingTab);
         tabbedPane.add("Costs", costsTab);
 
-        // Not available until labels exist
-        tabbedPane.setEnabledAt(3, false);
+        tabbedPane.setEnabledAt(3, false); // Not available until labels created
 
         // Switching tabs
         tabbedPane.getModel().addChangeListener(e -> {
-            // Update components using model
-            receiptsTab.setComboBox(receiptModel);
-            editTab.setScrollPane(receiptModel);
-            labellingTab.setScrollPane(receiptModel);
-
-            if (!labelMap.isEmpty()){
+            refreshTabs(receipt, receiptsTab, editTab, labellingTab);
+            if (!labels.isEmpty()) {
                 tabbedPane.setEnabledAt(3, true); // User can now access costs tab
                 // Update combo box and table due to label updates
-                costsTab.setComboBox(labelMap, receiptModel);
-                costsTab.setTable(labelMap, receiptModel);
-            }
-            else{
+                costsTab.setupLabelSelection(labels, receipt);
+                costsTab.setupLabelSelection(labels, receipt);
+            } else {
                 tabbedPane.setEnabledAt(3, false);
             }
         });
 
-        frame.add(tabbedPane);
-        frame.setLocationByPlatform(true);
-        frame.setVisible(true);
-    }
-
-    private void setupMenu(JFrame frame, DefaultListModel<String> receiptModel, Map<String, Double> labelMap) {
-        JMenuBar menu = new JMenuBar();
-
-        // Save receipt with given name
-        saveButton.addActionListener(e -> {
-            String fileName = JOptionPane.showInputDialog("Save As"); // Get file name
-            if (!Objects.equals(fileName, null) && !fileName.equals("")) {
-                // Prompt user with file selection
-                int fileType = JOptionPane.showOptionDialog(frame,"Select below", "Save As", JOptionPane.YES_NO_OPTION,
-                                JOptionPane.INFORMATION_MESSAGE, null, new String[]{"PDF", "Text File"}, null);
-
-                if (fileType == 0) { // PDF
-                    ReceiptPDF.saveAsPDF(receiptModel, labelMap, userID.getText(), fileName);
-                }
-                else{ // Text file
-                    Receipt.toTxt(receiptModel, labelMap, userID.getText(), fileName);
-                }
-                // Refresh instance
-                frame.dispose();
-                new MainPage(receiptModel, labelMap);
+        undo.addActionListener(e -> {
+            if (Track.undoTracker.size() > 0) { // Potential undoes need to exist
+                Track.undo(receipt);
+                refreshTabs(receipt, receiptsTab, editTab, labellingTab);
+            } else {
+                JOptionPane.showMessageDialog(frame, "No edits to be undone");
             }
-            else{ // Invalid filename
-                JOptionPane.showMessageDialog(frame, "A file name is required");
+        });
+        redo.addActionListener(e -> {
+            if (Track.redoTracker.size() > 0) {
+                Track.redo(receipt);
+                refreshTabs(receipt, receiptsTab, editTab, labellingTab);
+            } else {
+                JOptionPane.showMessageDialog(frame, "No edits to be redone");
             }
         });
 
-        // Restart the application without saving
-        resetButton.addActionListener(e -> {
+        frame.add(tabbedPane);
+        frame.setLocationByPlatform(true); // Attempt to select best position for GUI
+        frame.setVisible(true);
+    }
+
+    private void setupMenu(JFrame frame, DefaultListModel<String> receipt, Map<String, Double> labels) {
+        JMenuBar menu = new JMenuBar();
+        JMenu optionsMenu = new JMenu("Options");
+        JMenu helpMenu = new JMenu("Help");
+
+        JMenuItem save = new JMenuItem("Save");
+        JMenuItem restart = new JMenuItem("Restart");
+        JMenuItem usage = new JMenuItem("Usage");
+        JMenuItem disclaimer = new JMenuItem("Disclaimer");
+
+        save.addActionListener(e -> {
+            String fileName = JOptionPane.showInputDialog("Save As"); // Get file name
+            if (!Objects.equals(fileName, null) && !fileName.equals("")) {
+                // Prompt user with file selection
+                int fileType = JOptionPane.showOptionDialog(frame, "Select below", "Save As", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE, null, new String[]{"PDF", "Text File"}, null);
+                if (fileType == 0) { // PDF
+                    SaveFinal.asPDF(receipt, labels, fileName);
+                } else { // Text file
+                    SaveFinal.asTXT(receipt, labels, fileName);
+                }
+                // Refresh instance
+                frame.dispose();
+                new MainPage(receipt, labels);
+            } else { // Invalid filename
+                JOptionPane.showMessageDialog(frame, "A file name is required");
+            }
+        });
+        // Dispose of current frame and open new start page
+        restart.addActionListener(e -> {
             int cancel = JOptionPane.showConfirmDialog(frame, "If current receipt is not saved it will be lost."
-                            + "", "Continue?", JOptionPane.YES_NO_OPTION);
+                    + "", "Continue?", JOptionPane.YES_NO_OPTION);
             if (cancel == 0) {
                 frame.dispose();
                 new StartPage();
             }
         });
 
-        saveButton.setFocusable(false);
-        resetButton.setFocusable(false);
+        // Help messages
+        usage.addActionListener(e -> JOptionPane.showMessageDialog(frame, """
+                The Receipt tab will show the current receipt and any saved receipts.
+                The Edit tab allows you to to select a line to edit, delete or center the line or to add a new line.
+                The Labelling tab allows you to track individual lines of the receipt.
+                The Costs tab shows a breakdown your labels."""));
+        disclaimer.addActionListener(e -> JOptionPane.showMessageDialog(frame, """
+                This application has very basic functionality and is designed for receipts, it will struggle to handle large documents
+                Once a receipt is saved its labels cannot be edited.
+                Tesseract OCR is used for image transcription.
+                Due to the nature of PDFs and images there will be mistakes with the translated receipts.
+                Thank you for your usage."""));
 
-        menu.add(saveButton);
-        menu.add(resetButton);
-        menu.add(new JSeparator());
-        menu.add(userID);
-        menu.add(new JSeparator());
+        optionsMenu.add(save);
+        optionsMenu.add(restart);
+        optionsMenu.add(undo);
+        optionsMenu.add(redo);
+        helpMenu.add(usage);
+        helpMenu.add(disclaimer);
 
+        menu.add(optionsMenu);
+        menu.add(helpMenu);
         frame.setJMenuBar(menu);
+    }
+
+    private void refreshTabs(DefaultListModel<String> receipt, ReceiptsTab receipts, EditingTab edit, LabellingTab label) {
+        // Update components using model
+        receipts.setupSelection(receipt);
+        edit.displayReceipt(receipt);
+        label.displayReceipt(receipt);
     }
 }

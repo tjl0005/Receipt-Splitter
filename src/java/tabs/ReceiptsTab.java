@@ -1,6 +1,6 @@
 package tabs;
 
-import classes.Receipt;
+import receipt.Prepare;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,19 +8,16 @@ import java.util.List;
 
 
 public class ReceiptsTab extends JPanel {
-    final DefaultListModel<String> jList = new DefaultListModel<>();
+    final DefaultListModel<String> receiptDisplay = new DefaultListModel<>();
     final List<String> allReceipts;
-    final String userID;
 
-    JComboBox<String> selectionBox = new JComboBox<>();
-    final JScrollPane scrollPane = new JScrollPane(new JList<>(jList));
+    JComboBox<String> receiptSelection = new JComboBox<>();
+    final JScrollPane scrollPane = new JScrollPane(new JList<>(receiptDisplay));
     final JPanel displayPanel = new JPanel();
 
-    public ReceiptsTab(String id, DefaultListModel<String> receipt) {
-
-        userID = id;
-        allReceipts = Receipt.getReceiptNames(userID);
-        populateJList(receipt);
+    public ReceiptsTab(DefaultListModel<String> receipt) {
+        allReceipts = Prepare.getNames();
+        populateDisplayList(receipt);
 
         if (allReceipts == null) {
             this.add(new JLabel("No saved receipts yet"));
@@ -32,7 +29,7 @@ public class ReceiptsTab extends JPanel {
                 allReceipts.add(0, "Current Receipt");
             }
 
-            setComboBox(receipt);
+            setupSelection(receipt);
         }
 
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
@@ -44,33 +41,31 @@ public class ReceiptsTab extends JPanel {
         this.setVisible(true);
     }
 
-    public void setComboBox(DefaultListModel<String> receipt) {
-        // Remove old versions
-        displayPanel.remove(scrollPane);
+    public void setupSelection(DefaultListModel<String> receipt) {
+        displayPanel.remove(scrollPane); // Removing old version
 
         if (allReceipts != null) {
-            displayPanel.remove(selectionBox);
-            // Setup combobox
-            selectionBox = new JComboBox<>(allReceipts.toArray(new String[0]));
-            selectionBox.addActionListener(e -> {
-                int selIndex = selectionBox.getSelectedIndex();
-                jList.removeAllElements();
+            displayPanel.remove(receiptSelection);
+            // Setup combobox with receipt names
+            receiptSelection = new JComboBox<>(allReceipts.toArray(new String[0]));
+            receiptSelection.addActionListener(e -> {
+                int selIndex = receiptSelection.getSelectedIndex();
+                receiptDisplay.removeAllElements();
                 // Not selecting current receipt
                 if (selIndex != 0) {
-                    String selectedReceipt = "Receipts/" + userID + "/" + allReceipts.get(selIndex);
-                    jList.addAll(Receipt.get(selectedReceipt, false));
-                    receipt.addAll(Receipt.get(selectedReceipt, false));
+                    String selectedReceipt = "Receipts/OpenBook/" + allReceipts.get(selIndex);
+                    receiptDisplay.addAll(Prepare.get(selectedReceipt)); // Update current display
                 } else {
-                    populateJList(receipt);
+                    populateDisplayList(receipt); // Just displaying current receipt
                 }
                 this.revalidate();
             });
-            displayPanel.add(selectionBox);
+            displayPanel.add(receiptSelection);
         }
 
         // Display first label contents by default
-        jList.removeAllElements();
-        populateJList(receipt);
+        receiptDisplay.removeAllElements();
+        populateDisplayList(receipt);
 
         // Refresh with updated display panel
         displayPanel.add(scrollPane);
@@ -78,9 +73,10 @@ public class ReceiptsTab extends JPanel {
         displayPanel.repaint();
     }
 
-    public void populateJList(DefaultListModel<String> receipt) {
+    private void populateDisplayList(DefaultListModel<String> receipt) {
+        // Add current receipt model contents to display list
         for (int i = 0; i < receipt.size(); i++) {
-            jList.addElement(receipt.get(i));
+            receiptDisplay.addElement(receipt.get(i));
         }
     }
 }

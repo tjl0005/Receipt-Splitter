@@ -1,6 +1,7 @@
 package tabs;
 
-import classes.CheckboxListRenderer;
+import receipt.Checklist;
+import receipt.Track;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,39 +17,45 @@ public class EditingTab extends JPanel {
     JScrollPane scrollPane = new JScrollPane();
     final JPanel displayPanel = new JPanel(new BorderLayout());
     final JPanel buttonPanel = new JPanel(new FlowLayout());
+
     final JTextField editTextField = new JTextField();
     final JButton editButton = new JButton("Edit");
     final JButton centerButton = new JButton("Center");
     final JButton addButton = new JButton("Add");
     final JButton deleteButton = new JButton("Delete");
 
-    public EditingTab(DefaultListModel<String> receiptModel) {
-        setScrollPane(receiptModel); // This is the initial setup
-        buttonsValid(receiptModel); // Buttons initially disabled
+
+    public EditingTab(DefaultListModel<String> receipt) {
+        displayReceipt(receipt); // Display current version of receipt
+        buttonsValid(receipt); // Buttons initially disabled
 
         addButton.addActionListener(e -> {
-            receiptModel.add(currentSelection.get(0), editTextField.getText()); // Updating model with receipt copy
-            setScrollPane(receiptModel); // Now updating scroll pane
+            Track.recordChange(receipt);
+            receipt.add(currentSelection.get(0), editTextField.getText()); // Add new line before selected index
+            displayReceipt(receipt);
         });
 
         centerButton.addActionListener(e ->{
-            for (int index : currentSelection) {
-                String line = String.format("%52s", receiptModel.get(index)); // 52 is string width, can be a bit iffy
-                receiptModel.set(index, line);
+            Track.recordChange(receipt);
+            for (int index : currentSelection) { // Update for all currently selected
+                String line = String.format("%52s", receipt.get(index)); // 52 is string width, can be a bit iffy
+                receipt.set(index, line);
             }
-            setScrollPane(receiptModel);
+            displayReceipt(receipt);
         });
 
         editButton.addActionListener(e -> {
-            receiptModel.set(currentSelection.get(0), editTextField.getText());
-            setScrollPane(receiptModel);
+            Track.recordChange(receipt);
+            receipt.set(currentSelection.get(0), editTextField.getText()); // Update old value
+            displayReceipt(receipt);
         });
 
         deleteButton.addActionListener(e -> {
+            Track.recordChange(receipt);
             for (int i = 0; i < currentSelection.size(); i++){
-                receiptModel.remove(currentSelection.get(i) - i); // Using i as a counter to correct the old index
+                receipt.remove(currentSelection.get(i) - i); // Using i as a counter to correct the old index
             }
-            setScrollPane(receiptModel);
+            displayReceipt(receipt);
         });
 
         displayPanel.setBackground(Color.WHITE);
@@ -67,55 +74,18 @@ public class EditingTab extends JPanel {
         this.setVisible(true);
     }
 
-    private void mouseSelection(MouseEvent event) {
-        @SuppressWarnings("unchecked") // No need to check cast
-        JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
-
-        // Get the selected item
-        int listIndex = list.locationToIndex(event.getPoint());
-        CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
-
-        item.setSelected(!item.isSelected());
-        if (listIndex == 0) {
-            currentSelection.clear();
-            for (int i = 1; i < list.getModel().getSize() - 1; i++) {
-                CheckboxListRenderer.CheckboxListItem current = list.getModel().getElementAt(i);
-                current.setSelected(!current.isSelected());
-                if (item.isSelected()) {
-                    currentSelection.add(i - 1);
-                }
-            }
-        } else {
-            listIndex--;
-            // Update tracking of current selections
-            if (item.isSelected()) {
-                currentSelection.add(listIndex);
-            } else {
-                currentSelection.remove((Integer) listIndex);
-            }
-        }
-        list.repaint();
-    }
-
-    public void setScrollPane(DefaultListModel<String> receiptModel){
-        // Removing the old scrollPane and resetting the current selection
-        displayPanel.remove(scrollPane);
-        currentSelection = new ArrayList<>();
-
+    public void displayReceipt(DefaultListModel<String> receipt){
+        displayPanel.remove(scrollPane); // Remove old version of scroll pane
         // Set up the list
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.CheckboxListItem.generateList(receiptModel);
+        JList<Checklist.CheckboxListItem> list = Checklist.CheckboxListItem.generateList(receipt);
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
-                mouseSelection(event);
-                buttonsValid(receiptModel);
+                Checklist.getSelectedItems(event, currentSelection);
+                buttonsValid(receipt);
             }
         });
 
-        // Define new scrollPane
-        scrollPane = new JScrollPane(list);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
-
+        scrollPane = Checklist.buildScrollPane(list);
         // Refresh with updated display panel
         displayPanel.add(scrollPane);
         displayPanel.revalidate();

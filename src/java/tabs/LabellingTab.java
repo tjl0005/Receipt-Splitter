@@ -1,6 +1,7 @@
 package tabs;
 
-import classes.CheckboxListRenderer;
+import receipt.Checklist;
+import receipt.Track;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,34 +23,34 @@ public class LabellingTab extends JPanel {
 
 
     public LabellingTab(Map<String, Double> labelMap, DefaultListModel<String> receiptModel) {
-        setScrollPane(receiptModel);
+        displayReceipt(receiptModel);
 
-        labelButton.setEnabled(currentSelection.size() > 0);
-        removeButton.setEnabled(currentSelection.size() > 0);
+        labelButton.setEnabled(false);
+        removeButton.setEnabled(false);
 
         labelButton.addActionListener(e -> {
-            String newLabel = "<" + labelTextField.getText() + "> ";
-
+            Track.recordChange(receiptModel);
+            String newLabel = "<" + labelTextField.getText() + "> "; // Add prefix and suffix to label
             // Ensure label model does not get overwhelmed, needs updating
             if (!labelMap.containsKey(newLabel)){
-                labelMap.put(newLabel, 0.00);
+                labelMap.put(newLabel, 0.00); // Default cost is 0.00
             }
             for (int index : currentSelection) {
                 receiptModel.set(index, newLabel + receiptModel.get(index));
             }
-            setScrollPane(receiptModel);
+            displayReceipt(receiptModel);
         });
 
         removeButton.addActionListener(e -> {
+            Track.recordChange(receiptModel);
             for (int index : currentSelection) {
                 String line = receiptModel.get(index);
-
-                if (line.contains("<") && line.contains(">")){
+                if (line.contains("<") && line.contains(">")){ // Using prefix and suffix to identify labels
                     String newLine = line.replaceAll("<.*>", "");
                     receiptModel.set(index, newLine);
                 }
             }
-            setScrollPane(receiptModel);
+            displayReceipt(receiptModel);
         });
 
         displayPanel.setBackground(Color.WHITE);
@@ -66,60 +67,23 @@ public class LabellingTab extends JPanel {
         this.setVisible(true);
     }
 
-    public void setScrollPane(DefaultListModel<String> receiptModel){
-        // Removing the old scrollPane and resetting the current selection
+    public void displayReceipt(DefaultListModel<String> receiptModel){
+        // Removing the old scrollPane
         displayPanel.remove(scrollPane);
-        currentSelection = new ArrayList<>();
-
         // Set up the list
-        JList<CheckboxListRenderer.CheckboxListItem> list = CheckboxListRenderer.
-                CheckboxListItem.generateList(receiptModel);
+        JList<Checklist.CheckboxListItem> list = Checklist.CheckboxListItem.generateList(receiptModel);
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent event) {
-                mouseSelection(event);
+                Checklist.getSelectedItems(event, currentSelection);
                 labelButton.setEnabled(currentSelection.size() > 0);
                 removeButton.setEnabled(currentSelection.size() > 0);
             }
         });
-
-        // Define new scrollPane
-        scrollPane = new JScrollPane(list);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
-
+        // Refresh scrollPane
+        scrollPane = Checklist.buildScrollPane(list);
         // Refresh with updated display panel
         displayPanel.add(scrollPane);
         displayPanel.revalidate();
         displayPanel.repaint();
-    }
-
-    private void mouseSelection(MouseEvent event) {
-        @SuppressWarnings("unchecked") // No need to check cast
-        JList<CheckboxListRenderer.CheckboxListItem> list = (JList<CheckboxListRenderer.CheckboxListItem>) event.getSource();
-
-        // Get the selected item
-        int listIndex = list.locationToIndex(event.getPoint());
-        CheckboxListRenderer.CheckboxListItem item = list.getModel().getElementAt(listIndex);
-
-        item.setSelected(!item.isSelected());
-        if (listIndex == 0) {
-            currentSelection.clear();
-            for (int i = 1; i < list.getModel().getSize() - 1; i++) {
-                CheckboxListRenderer.CheckboxListItem current = list.getModel().getElementAt(i);
-                current.setSelected(!current.isSelected());
-                if (item.isSelected()) {
-                    currentSelection.add(i - 1);
-                }
-            }
-        } else {
-            listIndex--;
-            // Update tracking of current selections
-            if (item.isSelected()) {
-                currentSelection.add(listIndex);
-            } else {
-                currentSelection.remove((Integer) listIndex);
-            }
-        }
-        list.repaint();
     }
 }
