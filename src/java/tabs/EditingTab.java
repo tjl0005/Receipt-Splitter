@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * A tab providing the ability to edit the contents of a receipt
+ */
 public class EditingTab extends JPanel {
     List<Integer> currentSelection = new ArrayList<>();
 
@@ -25,6 +28,10 @@ public class EditingTab extends JPanel {
     final JButton deleteButton = new JButton("Delete");
 
 
+    /**
+     * Generate the editing tab to be displayed
+     * @param receipt the current receipt list model
+     */
     public EditingTab(DefaultListModel<String> receipt) {
         displayReceipt(receipt); // Display current version of receipt
         buttonsValid(receipt); // Buttons initially disabled
@@ -67,20 +74,24 @@ public class EditingTab extends JPanel {
         buttonPanel.add(deleteButton);
         buttonPanel.setFocusable(false);
 
-        this.add(displayPanel);
-        this.add(editTextField);
-        this.add(buttonPanel);
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setVisible(true);
+        add(displayPanel);
+        add(editTextField);
+        add(buttonPanel);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setVisible(true);
     }
 
+    /**
+     * Update the currently displayed receipt
+     * @param receipt the current receipt model to be displayed
+     */
     public void displayReceipt(DefaultListModel<String> receipt){
         displayPanel.remove(scrollPane); // Remove old version of scroll pane
         // Set up the list
         JList<Checklist.CheckboxListItem> list = Checklist.CheckboxListItem.generateList(receipt);
         list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent event) {
-                Checklist.getSelectedItems(event, currentSelection);
+            public void mouseClicked(MouseEvent e) {
+                Checklist.getSelectedItems(e, currentSelection);
                 buttonsValid(receipt);
             }
         });
@@ -96,8 +107,8 @@ public class EditingTab extends JPanel {
     private void buttonsValid(DefaultListModel<String> receipt) {
         editButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
         addButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
-        deleteButton.setEnabled(currentSelection.size() > 0);
-        centerButton.setEnabled(currentSelection.size() > 0);
+        deleteButton.setEnabled(!currentSelection.isEmpty());
+        centerButton.setEnabled(!currentSelection.isEmpty());
 
         if (currentSelection.size() == 1) {
             editTextField.setText(receipt.get(currentSelection.get(0)));

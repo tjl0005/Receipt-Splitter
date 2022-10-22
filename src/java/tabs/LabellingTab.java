@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * A tab providing the ability to add labels to given lines of the receipts
+ */
 public class LabellingTab extends JPanel {
     List<Integer> currentSelection = new ArrayList<>(); // Store selected indexes of selected lines
     JScrollPane scrollPane = new JScrollPane();
@@ -22,35 +25,40 @@ public class LabellingTab extends JPanel {
     final JPanel displayPanel = new JPanel(new GridLayout());
 
 
-    public LabellingTab(Map<String, Double> labelMap, DefaultListModel<String> receiptModel) {
-        displayReceipt(receiptModel);
+    /**
+     * Generate the tab to be used for adding/removing labels from a receipt
+     * @param labels a map containing the current labels and their respective total costs
+     * @param receipt a list model containing the receipt
+     */
+    public LabellingTab(Map<String, Double> labels, DefaultListModel<String> receipt) {
+        displayReceipt(receipt);
 
         labelButton.setEnabled(false);
         removeButton.setEnabled(false);
 
         labelButton.addActionListener(e -> {
-            Track.recordChange(receiptModel);
+            Track.recordChange(receipt);
             String newLabel = "<" + labelTextField.getText() + "> "; // Add prefix and suffix to label
             // Ensure label model does not get overwhelmed, needs updating
-            if (!labelMap.containsKey(newLabel)){
-                labelMap.put(newLabel, 0.00); // Default cost is 0.00
+            if (!labels.containsKey(newLabel)){
+                labels.put(newLabel, 0.00); // Default cost is 0.00
             }
             for (int index : currentSelection) {
-                receiptModel.set(index, newLabel + receiptModel.get(index));
+                receipt.set(index, newLabel + receipt.get(index));
             }
-            displayReceipt(receiptModel);
+            displayReceipt(receipt);
         });
 
         removeButton.addActionListener(e -> {
-            Track.recordChange(receiptModel);
+            Track.recordChange(receipt);
             for (int index : currentSelection) {
-                String line = receiptModel.get(index);
+                String line = receipt.get(index);
                 if (line.contains("<") && line.contains(">")){ // Using prefix and suffix to identify labels
                     String newLine = line.replaceAll("<.*>", "");
-                    receiptModel.set(index, newLine);
+                    receipt.set(index, newLine);
                 }
             }
-            displayReceipt(receiptModel);
+            displayReceipt(receipt);
         });
 
         displayPanel.setBackground(Color.WHITE);
@@ -60,23 +68,27 @@ public class LabellingTab extends JPanel {
         buttonPanel.add(removeButton);
         buttonPanel.setFocusable(false);
 
-        this.add(displayPanel);
-        this.add(labelTextField);
-        this.add(buttonPanel);
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setVisible(true);
+        add(displayPanel);
+        add(labelTextField);
+        add(buttonPanel);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setVisible(true);
     }
 
+    /**
+     * Update the currently displayed receipt
+     * @param receiptModel the current receipt as a list model
+     */
     public void displayReceipt(DefaultListModel<String> receiptModel){
         // Removing the old scrollPane
         displayPanel.remove(scrollPane);
         // Set up the list
         JList<Checklist.CheckboxListItem> list = Checklist.CheckboxListItem.generateList(receiptModel);
         list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent event) {
-                Checklist.getSelectedItems(event, currentSelection);
-                labelButton.setEnabled(currentSelection.size() > 0);
-                removeButton.setEnabled(currentSelection.size() > 0);
+            public void mouseClicked(MouseEvent e) {
+                Checklist.getSelectedItems(e, currentSelection);
+                labelButton.setEnabled(!currentSelection.isEmpty());
+                removeButton.setEnabled(!currentSelection.isEmpty());
             }
         });
         // Refresh scrollPane

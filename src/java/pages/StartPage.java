@@ -6,13 +6,16 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.util.LinkedHashMap;
+import java.util.*;
 
 
 public class StartPage {
     final JFrame frame = new JFrame();
     final JButton startButton = new JButton("Add Receipt");
 
+    /**
+     * Initial page shown to the user containing a button allowing the user to select a file to open
+     */
     public StartPage() {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setBounds(300, 300, 300, 300);
@@ -28,6 +31,10 @@ public class StartPage {
         frame.setVisible(true);
     }
 
+    /**
+     * Get the selected file from the user, open it and pass the receipt list model to the main page for viewing/editing
+     * @param e the action event of the button
+     */
     private void startOperation(ActionEvent e){
         if (e.getSource() == startButton) {
             // Only allow selection of PNG, JPG and PDF files

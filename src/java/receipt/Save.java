@@ -16,13 +16,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class SaveFinal {
-    public static List<String> prepareContents(DefaultListModel<String> list, Map<String, Double> labels){
+/**
+ * Used to save a final version of an opened receipt, it can be saved either as a fully formatted PDF file or as a
+ * standard txt file, which can be reread by the application properly.
+ */
+public class Save {
+    /**
+     * Given the current receipt model and its labels format their contents, so they can be saved to a file and be
+     * easily read
+     * @param receipt a list model containing the receipt contents to be saved
+     * @param labels a hashmap containing the labels and their total costs to be used for the final breakdown
+     * @return a list of strings containing the now prepared contents from the file
+     */
+    public static List<String> prepareContents(DefaultListModel<String> receipt, Map<String, Double> labels){
         List<String> toWrite = new ArrayList<>(); // Store all contents in list for easier writing
 
         // Receipt contents
-        for (int i = 0; i < list.size(); i++) {
-            toWrite.add(list.get(i));
+        for (int i = 0; i < receipt.size(); i++) {
+            toWrite.add(receipt.get(i));
         }
 
         // Label breakdown section
@@ -43,6 +54,12 @@ public class SaveFinal {
         return toWrite;
     }
 
+    /**
+     * Save the prepared contents as a text file
+     * @param text the prepared and formatted text to be written to the text file
+     * @param labels a hashmap containing the label details
+     * @param name the user decided name of the final receipts
+     */
     public static void asTXT(DefaultListModel<String> text, Map<String, Double> labels, String name){
         try {
             String directory = "Receipts/OpenBook/";
@@ -69,8 +86,14 @@ public class SaveFinal {
         }
     }
 
-    public static void asPDF(DefaultListModel<String> list, Map<String, Double> labels, String name) {
-        List<String> toWrite = prepareContents(list, labels);
+    /**
+     * Save the prepared contents as a formatted PDF file
+     * @param text the prepared and formatted text to be written to the text file
+     * @param labels a hashmap containing the label details
+     * @param name the user decided name of the final receipts
+     */
+    public static void asPDF(DefaultListModel<String> text, Map<String, Double> labels, String name) {
+        List<String> toWrite = prepareContents(text, labels);
         String directory = "Receipts/OpenBook/" + name + ".pdf";
 
         if (new File("Receipts/OpenBook/").mkdir()){
@@ -176,6 +199,11 @@ public class SaveFinal {
         }
     }
 
+    /**
+     * Given a content stream add header details to the page
+     * @param content the current content stream to add the header decorations to
+     * @param pageType either a receipt or label page, both require unique heading titles
+     */
     public static void addHeaderDecorations(PDPageContentStream content, String pageType){
         try{
             content.beginText();
@@ -191,6 +219,14 @@ public class SaveFinal {
         }
     }
 
+    /**
+     * Given a content stream add footer details to the current page
+     * @param content the current content stream to add the footer decorations to
+     * @param pageNum the number of the current page
+     * @param total the total number of pages in this document
+     * @param name the name of the receipt file
+     * @return the updated number of pages
+     */
     public static int addFooterDecorations(PDPageContentStream content, int pageNum, int total, String name) {
         try {
             content.setFont(PDType1Font.HELVETICA, 8);
@@ -216,6 +252,12 @@ public class SaveFinal {
         return pageNum;
     }
 
+    /**
+     * Given a label and a receipt get all matching strings within the list
+     * @param label the label to get the specific lines for
+     * @param receipt the receipt as a list of strings to be searched through
+     * @return a list of strings containing the relevant labelled lines
+     */
     public static List<String> getLabelledLines(String label, List<String> receipt){
         List<String> labelledLines = new ArrayList<>();
 
