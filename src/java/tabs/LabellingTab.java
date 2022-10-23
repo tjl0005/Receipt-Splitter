@@ -16,14 +16,12 @@ import java.util.Map;
  * A tab providing the ability to add labels to given lines of the receipts
  */
 public class LabellingTab extends JPanel {
-    List<Integer> currentSelection = new ArrayList<>(); // Store selected indexes of selected lines
-    JScrollPane scrollPane = new JScrollPane();
-    final JTextField labelTextField = new JTextField("My Label");
-    final JButton labelButton = new JButton("Add Label");
-    final JButton removeButton = new JButton("Remove Label");
-    final JPanel buttonPanel = new JPanel(new FlowLayout());
-    final JPanel displayPanel = new JPanel(new GridLayout());
-
+    private final List<Integer> currentSelection = new ArrayList<>(); // Store selected indexes of selected lines
+    private JScrollPane scrollPane = new JScrollPane();
+    private final JTextField labelTextField = new JTextField("My Label"); // Center text field
+    private final JButton labelButton = new JButton("Add Label");
+    private final JButton removeButton = new JButton("Remove Label");
+    private final JPanel displayPanel = new JPanel(new GridLayout());
 
     /**
      * Generate the tab to be used for adding/removing labels from a receipt
@@ -32,21 +30,23 @@ public class LabellingTab extends JPanel {
      */
     public LabellingTab(Map<String, Double> labels, DefaultListModel<String> receipt) {
         displayReceipt(receipt);
-
-        labelButton.setEnabled(false);
-        removeButton.setEnabled(false);
+        labelTextField.setHorizontalAlignment(JTextField.CENTER); // Center text field
 
         labelButton.addActionListener(e -> {
             Track.recordChange(receipt);
             String newLabel = "<" + labelTextField.getText() + "> "; // Add prefix and suffix to label
-            // Ensure label model does not get overwhelmed, needs updating
-            if (!labels.containsKey(newLabel)){
-                labels.put(newLabel, 0.00); // Default cost is 0.00
+            if (newLabel.length() < 15) {
+                if (!labels.containsKey(newLabel)) {
+                    labels.put(newLabel, 0.00); // Default cost is 0.00
+                }
+                for (int index : currentSelection) {
+                    receipt.set(index, newLabel + receipt.get(index).trim());
+                }
+                displayReceipt(receipt);
             }
-            for (int index : currentSelection) {
-                receipt.set(index, newLabel + receipt.get(index));
+            else{
+                JOptionPane.showMessageDialog(this, "Label to long");
             }
-            displayReceipt(receipt);
         });
 
         removeButton.addActionListener(e -> {
@@ -64,8 +64,10 @@ public class LabellingTab extends JPanel {
         displayPanel.setBackground(Color.WHITE);
         displayPanel.setPreferredSize(new Dimension(350, 600)); // Optimised for receipt
 
+        JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(labelButton);
         buttonPanel.add(removeButton);
+        buttonPanel.setEnabled(false);
         buttonPanel.setFocusable(false);
 
         add(displayPanel);

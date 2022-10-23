@@ -69,20 +69,6 @@ public class Checklist extends JCheckBox implements ListCellRenderer<Checklist.C
     }
 
     /**
-     * Used to set up the scroll pane containing the checkbox list and some basic formatting
-     * @param displayList the checkbox list containing the contents to be displayed
-     * @return the scroll pane containing the receipt to be displayed
-     */
-    public static JScrollPane buildScrollPane(JList<CheckboxListItem> displayList){
-        // Define new scrollPane
-        JScrollPane scrollPane = new JScrollPane(displayList);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
-
-        return scrollPane;
-    }
-
-    /**
      * Used to get the currently selected items from the list and update their status and to detect if select all has
      * is selected in which all items of the list will be updated
      * @param event the mouse event from a checkbox
@@ -91,7 +77,6 @@ public class Checklist extends JCheckBox implements ListCellRenderer<Checklist.C
     public static void getSelectedItems(MouseEvent event, List<Integer> currentSelection) {
         @SuppressWarnings("unchecked") // No need to check cast
         JList<Checklist.CheckboxListItem> list = (JList<Checklist.CheckboxListItem>) event.getSource();
-        currentSelection.clear();
         // Get the selected item
         int listIndex = list.locationToIndex(event.getPoint());
         Checklist.CheckboxListItem item = list.getModel().getElementAt(listIndex);
@@ -100,15 +85,17 @@ public class Checklist extends JCheckBox implements ListCellRenderer<Checklist.C
 
         // Selecting all check boxes
         if (listIndex == 0) {
+            currentSelection.clear();
+            boolean selectionType = item.isSelected();
             // Update status for all checkboxes
             for (int i = 1; i < list.getModel().getSize(); i++) {
-                Checklist.CheckboxListItem current = list.getModel().getElementAt(i);
-                current.setSelected(item.isSelected()); // Using boolean from select all index to ensure universal switch
-                if (item.isSelected()) {
+                CheckboxListItem current = list.getModel().getElementAt(i);
+                current.setSelected(selectionType); // Using boolean from select all index to ensure universal switch
+                if (selectionType) {
                     currentSelection.add(i - 1); // -1 to make up for taken index of "Select All" option
                 }
             }
-        } else {
+        } else { // Individual Selections
             listIndex--; // Making up for usage of "Select all function"
             // Update tracking of current selections
             if (item.isSelected()) {
@@ -118,5 +105,18 @@ public class Checklist extends JCheckBox implements ListCellRenderer<Checklist.C
             }
         }
         list.repaint();
+    }
+
+    /**
+     * Used to set up the scroll pane containing the checkbox list and some basic formatting
+     * @param displayList the checkbox list containing the contents to be displayed
+     * @return the scroll pane containing the receipt to be displayed
+     */
+    public static JScrollPane buildScrollPane(JList<CheckboxListItem> displayList){
+        JScrollPane scrollPane = new JScrollPane(displayList);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(5, 0));
+        scrollPane.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 5));
+
+        return scrollPane;
     }
 }

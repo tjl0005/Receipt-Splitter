@@ -8,7 +8,7 @@
 /dataSources.local.xml
 # Target
 /target/.*
-/Assets/Page Breakdown.docx
+/src/java/assets/Page Breakdown.docx
 /target/classes/classes/Receipt.class
 /out/artifacts/Receipt_Splitter_jar/Receipt Splitter.jar
 /target/classes/tabs/ReceiptsTab.class
@@ -24,3 +24,13 @@
 /target/classes/Main.class
 /target/classes/pages/MainPage.class
 /target/classes/META-INF/MANIFEST.MF
+/target/classes/receipt/Checklist$CheckboxListItem.class
+/target/classes/receipt/Checklist.class
+/src/java/assets/Logo Colours.JPG
+/src/main/resources/META-INF/MANIFEST.MF
+/src/java/assets/oldlogo.jpg
+/target/classes/receipt/Prepare.class
+/src/java/assets/Receipt.png
+/target/classes/receipt/Save.class
+/src/java/assets/Tabs.png
+/target/classes/receipt/Track.class

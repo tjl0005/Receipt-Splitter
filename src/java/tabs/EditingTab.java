@@ -15,17 +15,15 @@ import java.util.List;
  * A tab providing the ability to edit the contents of a receipt
  */
 public class EditingTab extends JPanel {
-    List<Integer> currentSelection = new ArrayList<>();
+    private final List<Integer> currentSelection = new ArrayList<>();
 
-    JScrollPane scrollPane = new JScrollPane();
-    final JPanel displayPanel = new JPanel(new BorderLayout());
-    final JPanel buttonPanel = new JPanel(new FlowLayout());
-
-    final JTextField editTextField = new JTextField();
-    final JButton editButton = new JButton("Edit");
-    final JButton centerButton = new JButton("Center");
-    final JButton addButton = new JButton("Add");
-    final JButton deleteButton = new JButton("Delete");
+    private JScrollPane scrollPane = new JScrollPane();
+    private final JPanel displayPanel = new JPanel(new BorderLayout());
+    private final JTextField editTextField = new JTextField();
+    private final JButton editButton = new JButton("Edit");
+    private final JButton centerButton = new JButton("Center");
+    private final JButton addButton = new JButton("Add");
+    private final JButton deleteButton = new JButton("Delete");
 
 
     /**
@@ -35,6 +33,7 @@ public class EditingTab extends JPanel {
     public EditingTab(DefaultListModel<String> receipt) {
         displayReceipt(receipt); // Display current version of receipt
         buttonsValid(receipt); // Buttons initially disabled
+        editTextField.setHorizontalAlignment(JTextField.CENTER); // Center text field
 
         addButton.addActionListener(e -> {
             Track.recordChange(receipt);
@@ -42,19 +41,16 @@ public class EditingTab extends JPanel {
             displayReceipt(receipt);
         });
 
-        centerButton.addActionListener(e ->{
-            Track.recordChange(receipt);
-            for (int index : currentSelection) { // Update for all currently selected
-                String line = String.format("%52s", receipt.get(index)); // 52 is string width, can be a bit iffy
-                receipt.set(index, line);
-            }
-            displayReceipt(receipt);
-        });
-
         editButton.addActionListener(e -> {
             Track.recordChange(receipt);
-            receipt.set(currentSelection.get(0), editTextField.getText()); // Update old value
-            displayReceipt(receipt);
+            String editedLine = editTextField.getText();
+            if (editedLine.length() < 125) {
+                receipt.set(currentSelection.get(0), editedLine); // Update old value
+                displayReceipt(receipt);
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Edited line to long");
+            }
         });
 
         deleteButton.addActionListener(e -> {
@@ -65,13 +61,24 @@ public class EditingTab extends JPanel {
             displayReceipt(receipt);
         });
 
+        centerButton.addActionListener(e ->{
+            Track.recordChange(receipt);
+            System.out.println(currentSelection);
+            for (int index : currentSelection) { // Update for all currently selected
+                String line = String.format("%52s", receipt.get(index)); // 52 is string width, can be a bit iffy
+                receipt.set(index, line);
+            }
+            displayReceipt(receipt);
+        });
+
         displayPanel.setBackground(Color.WHITE);
         displayPanel.setPreferredSize(new Dimension(350, 490)); // Optimised for receipt
 
+        JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
-        buttonPanel.add(centerButton);
         buttonPanel.add(deleteButton);
+        buttonPanel.add(centerButton);
         buttonPanel.setFocusable(false);
 
         add(displayPanel);
@@ -105,8 +112,8 @@ public class EditingTab extends JPanel {
 
     // Hide buttons until valid selection made
     private void buttonsValid(DefaultListModel<String> receipt) {
-        editButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
-        addButton.setEnabled(currentSelection.size() == 1 && currentSelection.get(0) != 0);
+        editButton.setEnabled(currentSelection.size() == 1);
+        addButton.setEnabled(currentSelection.size() == 1);
         deleteButton.setEnabled(!currentSelection.isEmpty());
         centerButton.setEnabled(!currentSelection.isEmpty());
 

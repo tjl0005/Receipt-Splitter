@@ -4,6 +4,7 @@ import receipt.Prepare;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -11,12 +12,12 @@ import java.util.List;
  * A tab enabling a user to browse their currently saved receipts as well as the currently edited receipt
  */
 public class ReceiptsTab extends JPanel {
-    final DefaultListModel<String> receiptDisplay = new DefaultListModel<>();
-    final List<String> allReceipts;
+    private final DefaultListModel<String> receiptDisplay = new DefaultListModel<>();
+    private final List<String> allReceipts;
 
-    JComboBox<String> receiptSelection = new JComboBox<>();
-    final JScrollPane scrollPane = new JScrollPane(new JList<>(receiptDisplay));
-    final JPanel displayPanel = new JPanel();
+    private JComboBox<String> receiptSelection = new JComboBox<>();
+    private final JScrollPane scrollPane = new JScrollPane(new JList<>(receiptDisplay));
+    private final JPanel displayPanel = new JPanel();
 
     /**
      * Generate the receipts tab to be displayed
@@ -24,18 +25,15 @@ public class ReceiptsTab extends JPanel {
      */
     public ReceiptsTab(DefaultListModel<String> receipt) {
         allReceipts = Prepare.getNames();
-        populateDisplayList(receipt);
+        receiptDisplay.addAll(populateList(receipt));
 
         if (allReceipts == null) {
-            this.add(new JLabel("No saved receipts yet"));
             displayPanel.add(scrollPane);
-        } else {
-            // Initial State
+        } else { // Initial State
             if (!allReceipts.contains("Current Receipt")) {
                 // Update list of saved receipts with current receipt
                 allReceipts.add(0, "Current Receipt");
             }
-
             setupSelection(receipt);
         }
 
@@ -59,16 +57,18 @@ public class ReceiptsTab extends JPanel {
             displayPanel.remove(receiptSelection);
             // Setup combobox with receipt names
             receiptSelection = new JComboBox<>(allReceipts.toArray(new String[0]));
+            ((JLabel)receiptSelection.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER); // Center contents
             receiptSelection.addActionListener(e -> {
                 int selIndex = receiptSelection.getSelectedIndex();
                 receiptDisplay.removeAllElements();
-                // Not selecting current receipt
-                if (selIndex != 0) {
-                    String selectedReceipt = "Receipts/OpenBook/" + allReceipts.get(selIndex);
-                    receiptDisplay.addAll(Prepare.get(selectedReceipt)); // Update current display
-                    receipt.removeAllElements();
+
+                if (selIndex != 0) { // Not selecting current receipt
+                    String selectedReceipt = System.getProperty("user.home") + "/Documents/OpenBook/" + allReceipts.get(selIndex);
+                    List<String> selectedContents = Prepare.getReceipt(selectedReceipt);
+                    // Update the labels and receipt to be used
+                    receiptDisplay.addAll(selectedContents); // Update current display
                 } else {
-                    populateDisplayList(receipt); // Just displaying current receipt
+                    receiptDisplay.addAll(populateList(receipt)); // Use contents from receipt model
                 }
                 revalidate();
             });
@@ -77,7 +77,7 @@ public class ReceiptsTab extends JPanel {
 
         // Display first label contents by default
         receiptDisplay.removeAllElements();
-        populateDisplayList(receipt);
+        receiptDisplay.addAll(populateList(receipt));
 
         // Refresh with updated display panel
         displayPanel.add(scrollPane);
@@ -89,11 +89,13 @@ public class ReceiptsTab extends JPanel {
      * Used to provide a manner of displaying a receipt
      * @param receipt the receipt model
      */
-    private void populateDisplayList(DefaultListModel<String> receipt) {
+    private List<String> populateList(DefaultListModel<String> receipt) {
+        List<String> receiptList = new ArrayList<>();
         // Add current receipt model contents to display list
         for (int i = 0; i < receipt.size(); i++) {
-            receiptDisplay.addElement(receipt.get(i));
+            receiptList.add(receipt.get(i));
         }
+        return receiptList;
     }
 }
 

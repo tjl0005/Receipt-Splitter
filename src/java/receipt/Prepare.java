@@ -18,7 +18,7 @@ public class Prepare {
      * @param fileDirectory the file directory of the receipt to be retrieved
      * @return A list of strings containing each line of the given receipt
      */
-    public static List<String> get(String fileDirectory) {
+    public static List<String> getReceipt(String fileDirectory) {
         String fileType = fileDirectory.substring(fileDirectory.length() - 3); // Get file extension
 
         if (Objects.equals(fileType, "pdf")) {
@@ -32,12 +32,11 @@ public class Prepare {
                     return receipt.subList(0, i);
                 }
             }
-
             return receipt;
         } else if (fileType.equals("txt")) {
-            return new ArrayList<>(Prepare.getFromText(fileDirectory));
+            return Prepare.getFromText(fileDirectory);
         } else { // PNG or JPG
-            return new ArrayList<>(Prepare.getFromPicture(fileDirectory));
+            return Prepare.getFromPicture(fileDirectory);
         }
     }
 
@@ -45,22 +44,20 @@ public class Prepare {
      * @return The names of all the users saved receipts, they must be in the open book directory to be noticed
      */
     public static List<String> getNames(){
-        List<String> results = new ArrayList<>();
-
         // Only txt or PDF files
         FilenameFilter textFilter = (dir, name) -> name.toLowerCase().endsWith(".txt") | name.toLowerCase().endsWith(".pdf");
-        File[] files = new File("Receipts/OpenBook/").listFiles(textFilter);
+        File[] files = new File(System.getProperty("user.home") + "/Documents/OpenBook/").listFiles(textFilter);
 
         if (Arrays.toString(files).equals("[]") | files == null){
             return null; // No files found
         }
 
+        List<String> results = new ArrayList<>();
         for (File file : files) {
             if (file.isFile()) {
                 results.add(file.getName());
             }
         }
-
         return results;
     }
 
@@ -95,8 +92,6 @@ public class Prepare {
         try {
             ocr.setDatapath("tessdata");
             receipt = ocr.doOCR(new File(fileDirectory));
-
-            return List.of(receipt.split("\\R"));
         } catch (TesseractException e) {
             System.out.println("Image file not found");
         }
@@ -106,7 +101,6 @@ public class Prepare {
 
     /**
      * Translate contents of a PDF line by line
-     *
      * @param fileDirectory the directory of the PDF receipt
      * @return a list of strings containing each line of the pdf
      */
@@ -132,6 +126,9 @@ public class Prepare {
      */
     public static Map<String, Double> labelMapFromPDF(String fileDirectory){
         List<String> receipt = getFromPDF(fileDirectory);
+        if (receipt.isEmpty()){
+            return null;
+        }
         //split by detecting newline
         Map<String, Double> labelMap = new LinkedHashMap<>();
         List<Double> costs = new ArrayList<>();

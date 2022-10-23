@@ -13,4 +13,9 @@
       <module name="Receipt Splitter" target="17" />
     </bytecodeTargetLevel>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Receipt Splitter" options="--add-exports java.base/jdk.internal.icu.impl=ALL-UNNAMED" />
+    </option>
+  </component>
 </project>

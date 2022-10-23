@@ -21,11 +21,14 @@ import java.util.Map;
  * standard txt file, which can be reread by the application properly.
  */
 public class Save {
+    static private final String directory = System.getProperty("user.home") + "/Documents/OpenBook/";
+
     /**
      * Given the current receipt model and its labels format their contents, so they can be saved to a file and be
      * easily read
      * @param receipt a list model containing the receipt contents to be saved
-     * @param labels a hashmap containing the labels and their total costs to be used for the final breakdown
+     * @param labels a hashmap containing the labels and their total
+     *              costs to be used for the final breakdown
      * @return a list of strings containing the now prepared contents from the file
      */
     public static List<String> prepareContents(DefaultListModel<String> receipt, Map<String, Double> labels){
@@ -62,7 +65,6 @@ public class Save {
      */
     public static void asTXT(DefaultListModel<String> text, Map<String, Double> labels, String name){
         try {
-            String directory = "Receipts/OpenBook/";
             File file = new File(directory);
 
             // If users directory does not exist create new folder
@@ -74,10 +76,12 @@ public class Save {
                     writer.write(text.get(i) + System.lineSeparator());
                 }
                 // Write labelMap contents
-                writer.write("Label Breakdown" + System.lineSeparator());
-                for (String label: labels.keySet().stream().toList()){
-                    writer.write(label.substring(1, label.length() - 2) + System.lineSeparator());
-                    writer.write(labels.get(label) + System.lineSeparator());
+                if (!labels.isEmpty()) {
+                    writer.write("Label Breakdown" + System.lineSeparator());
+                    for (String label : labels.keySet().stream().toList()) {
+                        writer.write(label.substring(1, label.length() - 2) + System.lineSeparator());
+                        writer.write(labels.get(label) + System.lineSeparator());
+                    }
                 }
                 writer.close();
             }
@@ -94,9 +98,9 @@ public class Save {
      */
     public static void asPDF(DefaultListModel<String> text, Map<String, Double> labels, String name) {
         List<String> toWrite = prepareContents(text, labels);
-        String directory = "Receipts/OpenBook/" + name + ".pdf";
+        File file = new File(directory);
 
-        if (new File("Receipts/OpenBook/").mkdir()){
+        if (file.exists() | file.mkdir()) {
             System.out.println("Creating directory");
         }
 
@@ -193,7 +197,7 @@ public class Save {
                 ++lines;
             }
             content.close();
-            doc.save(directory);
+            doc.save(directory + name + ".pdf");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -78,6 +78,7 @@ public class CostsTab extends JPanel {
 
         // Setup combobox
         selectionBox = new JComboBox<>(labelText.toArray(new String[0]));
+        ((JLabel)selectionBox.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER); // Center contents
         selectionBox.addActionListener(e -> {
             int index = selectionBox.getSelectedIndex();
             List<String> labelledLines = getLabelledLines(labelText.get(index), receipt);
